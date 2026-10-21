@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UCC Admin | Executive Officials</title>
+	<link rel="icon" type="image/png" href="assets/images/ucc-LOGO.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="assets/css/posts.css">
+	
+</head>
+<body data-page-title="Executive Officials">
+<div class="dashboard-layout">
+	<div id="sidebar-container"></div>
+	<main class="main-content">
+		<div id="header-container"></div>
+		<section class="posts-page">
+			<div class="posts-intro">
+				<div>
+					<p>Manage executive official profiles displayed on the public website.</p>
+				</div>
+			</div>
+
+			<div class="posts-toolbar">
+				<div class="posts-tools-left">
+					<div class="posts-search">
+						<input type="search" id="officialSearch" placeholder="Search officials..." aria-label="Search officials">
+						<i data-lucide="search"></i>
+					</div>
+
+					<select id="officialStatusFilter" class="posts-filter" aria-label="Filter by status">
+						<option value="all">All Statuses</option>
+						<option value="active">Active</option>
+						<option value="inactive">Hidden</option>
+					</select>
+
+					<select id="officialOrderFilter" class="posts-filter" aria-label="Sort officials">
+						<option value="ascending">Order: Low to High</option>
+						<option value="descending">Order: High to Low</option>
+						<option value="name">Name: A to Z</option>
+					</select>
+				</div>
+				<button type="button" id="addOfficialBtn" class="post-btn post-btn-primary"><i data-lucide="plus"></i> Add Official</button>
+			</div>
+
+			<div class="posts-card">
+				<div class="posts-card-head">
+					<h2>Executive Officials</h2>
+					<span id="tableOfficialCount" class="posts-count">0 officials</span>
+				</div>
+
+				<div class="posts-table-wrap">
+					<table class="posts-table">
+						<thead>
+							<tr>
+								<th class="col-image">Photo</th>
+								<th class="col-title">Name</th>
+								<th class="col-category">Position</th>
+								<th>Order</th>
+								<th class="col-status">Status</th>
+								<th class="col-actions">Actions</th>
+							</tr>
+						</thead>
+						<tbody id="officialsTableBody"></tbody>
+					</table>
+				</div>
+
+				<div id="emptyState" class="empty-row" style="text-align:center; padding: 42px;" hidden>
+					<i data-lucide="user-round-search" style="width: 48px; height: 48px; margin-bottom: 12px; color: #7a847f;"></i>
+					<h3 style="margin-bottom: 8px; color: #0d2a21;">No officials found</h3>
+					<p style="color: #6d7873;">Try a different search term or status filter.</p>
+				</div>
+			</div>
+
+			<div class="posts-list-controls">
+				<div id="officialsPagination" class="posts-pagination"></div>
+				<p id="officialsEndMessage" class="posts-end-message" hidden>-- No more items --</p>
+			</div>
+
+			<div id="officialModal" class="post-modal" aria-hidden="true">
+				<div class="post-modal-backdrop" data-close-modal></div>
+				<div class="post-modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+					<div class="post-modal-head">
+						<div>
+							<h2 id="modalTitle">Add Official</h2>
+							<p id="postFormDescription">Add or update an official’s photo, name, position, biography, display order, and publication status.</p>
+						</div>
+						<button type="button" class="modal-close" id="closeModalBtn" data-close-modal aria-label="Close modal"><i data-lucide="x"></i></button>
+					</div>
+					<form id="officialForm" class="post-form" enctype="multipart/form-data">
+						<div class="image-upload-area">
+							<div id="officialUploadInitials" class="upload-placeholder"><i data-lucide="user"></i><strong>Official Photo</strong></div>
+							<img id="officialUploadImage" class="image-preview" alt="Official photo preview">
+							<input id="officialPhoto" type="file" accept="image/*" hidden>
+							<button type="button" id="chooseOfficialPhotoBtn" class="post-btn post-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
+							<button type="button" id="removeOfficialPhoto" class="post-btn post-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
+						</div>
+
+						<div class="form-grid">
+							<label class="form-field">
+								<span>Full Name</span>
+								<input id="name" name="name" type="text" placeholder="Enter full name" required>
+							</label>
+							<label class="form-field">
+								<span>Position</span>
+								<input id="position" name="position" type="text" placeholder="Enter official position" required>
+							</label>
+							<label class="form-field full-width">
+								<span>Biography / Short Description</span>
+								<textarea id="bio" name="bio" rows="4" placeholder="Enter biography or additional role information"></textarea>
+							</label>
+							<label class="form-field">
+								<span>Display Order</span>
+								<input id="displayOrder" name="displayOrder" type="number" min="1" value="1" required>
+							</label>
+							<label class="form-field">
+								<span>Status</span>
+								<select id="status" name="status">
+									<option value="Active">Active</option>
+									<option value="Inactive">Hidden</option>
+								</select>
+							</label>
+						</div>
+
+						<div class="form-actions">
+							<button type="button" id="cancelBtn" class="post-btn post-btn-ghost form-cancel" data-close-modal>Cancel</button>
+							<div class="form-actions-right">
+								<button type="button" id="previewOfficialFormBtn" class="post-btn post-btn-ghost"><i data-lucide="eye"></i> Preview</button>
+								<button type="submit" id="saveOfficialBtn" class="post-btn post-btn-primary"><i data-lucide="save"></i> Save Official</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div id="officialPreviewModal" class="post-modal preview-modal" aria-hidden="true">
+				<div class="post-modal-backdrop" data-close-preview></div>
+				<article class="post-modal-panel person-preview-panel" role="dialog" aria-modal="true" aria-labelledby="officialPreviewTitle">
+					<div class="post-modal-head">
+						<div><h2 id="officialPreviewTitle">Executive Official Preview</h2></div>
+						<button type="button" class="modal-close" id="closeOfficialPreview" data-close-preview aria-label="Close preview"><i data-lucide="x"></i></button>
+					</div>
+					<div class="person-preview-body">
+						<div class="person-preview-top">
+							<div class="person-preview-photo">
+								<span id="officialPreviewInitials">OF</span>
+								<img id="officialPreviewImage" alt="Official photo" hidden>
+							</div>
+							<div>
+								<h3 class="person-preview-name" id="officialPreviewName">Official Name</h3>
+								<p class="person-preview-position" id="officialPreviewPosition"></p>
+								<span id="officialPreviewStatus" class="status-badge status-published">Active</span>
+							</div>
+						</div>
+						<div class="person-preview-section">
+							<p class="person-preview-label">Biography / Short Description</p>
+							<p id="officialPreviewBio" class="person-preview-text"></p>
+							<p id="officialPreviewOrder" class="person-preview-order"></p>
+						</div>
+					</div>
+					<footer class="person-preview-meta">
+						<div><span>Created by</span><strong id="previewMetadataCreatedBy">—</strong></div>
+						<div><span>Date created</span><strong id="previewMetadataDateCreated">—</strong></div>
+						<div><span>Last updated by</span><strong id="previewMetadataLastUpdatedBy">—</strong></div>
+					</footer>
+				</article>
+			</div>
+
+			<div id="viewModal" class="post-modal preview-modal" aria-hidden="true">
+				<div class="post-modal-backdrop" data-close-view></div>
+				<article class="post-modal-panel person-preview-panel" role="dialog" aria-modal="true" aria-labelledby="viewModalTitle">
+					<div class="post-modal-head">
+						<div><h2 id="viewModalTitle">Executive Official Details</h2></div>
+						<button type="button" class="modal-close" id="closeViewBtn" data-close-view aria-label="Close details"><i data-lucide="x"></i></button>
+					</div>
+					<div class="person-preview-body">
+						<div class="person-preview-top">
+							<div class="person-preview-photo">
+								<span id="viewInitials">OF</span>
+								<img id="viewImage" alt="Official photo" hidden>
+							</div>
+							<div>
+								<h3 class="person-preview-name" id="viewName"></h3>
+								<p class="person-preview-position" id="viewPosition"></p>
+								<span id="viewStatus" class="status-badge status-published"></span>
+							</div>
+						</div>
+						<div class="person-preview-section">
+							<p class="person-preview-label">Biography / Short Description</p>
+							<p id="viewBio" class="person-preview-text"></p>
+							<p id="viewOrder" class="person-preview-order"></p>
+						</div>
+					</div>
+					<footer class="person-preview-meta">
+						<div><span>Created by</span><strong id="viewMetadataCreatedBy">—</strong></div>
+						<div><span>Date created</span><strong id="viewMetadataDateCreated">—</strong></div>
+						<div><span>Last updated by</span><strong id="viewMetadataLastUpdatedBy">—</strong></div>
+					</footer>
+				</article>
+			</div>
+
+			<div class="ui-toast" id="officialToast" role="status" aria-live="polite"></div>
+		</section>
+	</main>
+</div>
+
+<script src="assets/js/shared-layout.js"></script>
+<script src="assets/js/executive.js"></script>
+
+</body>
+</html>

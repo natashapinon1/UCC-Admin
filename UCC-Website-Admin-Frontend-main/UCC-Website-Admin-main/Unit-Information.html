@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UCC Admin | Unit Information</title>
+	<link rel="icon" type="image/png" href="assets/images/ucc-LOGO.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="assets/css/posts.css">
+
+</head>
+<body data-page-title="Unit Information">
+<div class="dashboard-layout">
+	<div id="sidebar-container"></div>
+	<main class="main-content">
+		<div id="header-container"></div>
+		<section class="posts-page">
+			<div class="posts-intro">
+				<div>
+					<p>Manage unit mission, vision, descriptions, and publication status.</p>
+				</div>
+			</div>
+
+			<div class="posts-toolbar">
+				<div class="posts-tools-left">
+					<div class="posts-search">
+						<input type="search" id="unitInfoSearch" placeholder="Search unit information..." aria-label="Search unit information">
+						<i data-lucide="search"></i>
+					</div>
+
+					<select id="unitInfoUnitFilter" class="posts-filter" aria-label="Filter by unit">
+						<option value="All">All units</option>
+						<option>College of Arts and Sciences</option>
+						<option>College of Business and Accountancy</option>
+						<option>College of Education</option>
+						<option>College of Computer Studies</option>
+						<option>College of Engineering</option>
+						<option>Office of Student Affairs</option>
+					</select>
+
+					<select id="unitInfoStatusFilter" class="posts-filter" aria-label="Filter by status">
+						<option value="All">All statuses</option>
+						<option value="Active">Active</option>
+						<option value="Hidden">Hidden</option>
+					</select>
+
+					<select id="unitInfoSort" class="posts-filter" aria-label="Sort records">
+						<option value="name-asc">Unit: A to Z</option>
+						<option value="name-desc">Unit: Z to A</option>
+						<option value="newest">Newest added</option>
+						<option value="oldest">Oldest added</option>
+					</select>
+				</div>
+				<button type="button" id="addUnitInfoBtn" class="post-btn post-btn-primary"><i data-lucide="plus"></i> Add Information</button>
+			</div>
+
+			<div class="posts-card">
+				<div class="posts-card-head">
+					<h2>Unit Information</h2>
+					<span id="unitInfoCount" class="posts-count">0 records</span>
+				</div>
+				<div class="posts-table-wrap">
+					<table class="posts-table">
+						<thead>
+							<tr>
+								<th class="col-title">Unit</th>
+								<th>Mission</th>
+								<th>Vision</th>
+								<th>Description</th>
+								<th class="col-status">Status</th>
+								<th class="col-actions">Actions</th>
+							</tr>
+						</thead>
+						<tbody id="unitInfoTableBody"></tbody>
+					</table>
+				</div>
+				<div id="unitInfoEmpty" class="empty-row" style="text-align:center; padding: 42px;" hidden>
+					<i data-lucide="building-2" style="width: 48px; height: 48px; margin-bottom: 12px; color: #7a847f;"></i>
+					<h3 style="margin-bottom: 8px; color: #0d2a21;">No unit information found</h3>
+					<p style="color: #6d7873;">Try another search term, unit, or status filter.</p>
+				</div>
+			</div>
+
+			<div class="posts-list-controls">
+				<button type="button" id="unitInfoShowMore" class="posts-show-more" hidden>Show more</button>
+				<p id="unitInfoEndMessage" class="posts-end-message" hidden>-- No more items --</p>
+			</div>
+
+			<div id="unitInfoFormModal" class="post-modal" aria-hidden="true">
+				<div class="post-modal-backdrop" data-close-unit-info-form></div>
+				<div class="post-modal-panel" role="dialog" aria-modal="true" aria-labelledby="unitInfoFormTitle">
+					<div class="post-modal-head">
+						<div>
+							<h2 id="unitInfoFormTitle">Add Unit Information</h2>
+							<p id="postFormDescription">Add or update a unit's mission, vision, description, and status.</p>
+						</div>
+						<button type="button" class="modal-close" data-close-unit-info-form aria-label="Close form"><i data-lucide="x"></i></button>
+					</div>
+					<form id="unitInfoForm" class="post-form">
+						<div class="form-grid">
+							<label class="form-field full-width">
+								<span>Unit</span>
+								<select id="unitInfoUnit" required>
+									<option value="">Select a unit</option>
+									<option>College of Arts and Sciences</option>
+									<option>College of Business and Accountancy</option>
+									<option>College of Education</option>
+									<option>College of Computer Studies</option>
+									<option>College of Engineering</option>
+									<option>Office of Student Affairs</option>
+								</select>
+							</label>
+							<label class="form-field full-width">
+								<span>Mission</span>
+								<textarea id="unitInfoMission" rows="3" placeholder="Enter the unit's mission" required></textarea>
+							</label>
+							<label class="form-field full-width">
+								<span>Vision</span>
+								<textarea id="unitInfoVision" rows="3" placeholder="Enter the unit's vision" required></textarea>
+							</label>
+							<label class="form-field full-width">
+								<span>Description</span>
+								<textarea id="unitInfoDescription" rows="4" placeholder="Enter a description of the unit" required></textarea>
+							</label>
+							<label class="form-field">
+								<span>Status</span>
+								<select id="unitInfoStatus" name="status">
+									<option value="Active">Active</option>
+									<option value="Hidden">Hidden</option>
+								</select>
+							</label>
+						</div>
+						<div class="form-actions">
+							<button type="button" id="cancelUnitInfoBtn" class="post-btn post-btn-ghost form-cancel">Cancel</button>
+							<div class="form-actions-right">
+								<button type="button" id="previewUnitInfoBtn" class="post-btn post-btn-ghost"><i data-lucide="eye"></i> Preview</button>
+								<button type="submit" class="post-btn post-btn-primary"><i data-lucide="save"></i> Save Information</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div id="unitInfoPreviewModal" class="post-modal preview-modal" aria-hidden="true">
+				<div class="post-modal-backdrop" data-close-unit-info-preview></div>
+				<article class="post-modal-panel unitinfo-preview-panel" role="dialog" aria-modal="true" aria-labelledby="unitInfoPreviewTitle">
+					<div class="post-modal-head">
+						<div><h2 id="unitInfoPreviewTitle">Unit Information Preview</h2></div>
+						<button type="button" class="modal-close" data-close-unit-info-preview aria-label="Close preview"><i data-lucide="x"></i></button>
+					</div>
+					<div class="unitinfo-preview-body">
+						<p class="unitinfo-preview-eyebrow">Unit</p>
+						<h3 class="unitinfo-preview-name" id="previewUnitInfoUnit">Unit name</h3>
+						<span id="previewUnitInfoStatus" class="status-badge status-published">Active</span>
+
+						<div class="unitinfo-preview-section">
+							<p class="unitinfo-preview-label">Mission</p>
+							<p id="previewUnitInfoMission" class="unitinfo-preview-text"></p>
+						</div>
+						<div class="unitinfo-preview-section">
+							<p class="unitinfo-preview-label">Vision</p>
+							<p id="previewUnitInfoVision" class="unitinfo-preview-text"></p>
+						</div>
+						<div class="unitinfo-preview-section">
+							<p class="unitinfo-preview-label">Description</p>
+							<p id="previewUnitInfoDescription" class="unitinfo-preview-text"></p>
+						</div>
+					</div>
+					<footer class="unitinfo-preview-meta">
+						<div><span>Created by</span><strong id="unitInfoCreatedBy">Admin</strong></div>
+						<div><span>Date created</span><strong id="unitInfoDateCreated">—</strong></div>
+						<div><span>Last updated by</span><strong id="unitInfoLastUpdatedBy">—</strong></div>
+					</footer>
+				</article>
+			</div>
+
+			<div class="ui-toast" id="unitInfoToast" role="status" aria-live="polite"></div>
+		</section>
+	</main>
+</div>
+
+<script src="assets/js/shared-layout.js"></script>
+<script src="assets/js/unitinfo.js"></script>
+<script src="assets/js/ucc-common.js"></script>
+
+</body>
+</html>
