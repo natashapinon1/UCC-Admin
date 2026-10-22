@@ -1,17 +1,18 @@
 (function () {
-    const {fillMeta, offsetDate, $, esc, statusClass, effectiveStatus, mapsUrl, isUrl, fmtDate, toast, openModal, closeModal, confirmDelete, list, icons, initMenu} = UCC;
+    const {fillMeta, $, esc, mapsUrl, isUrl, toast, openModal, closeModal, confirmDelete, list, icons, initMenu} = UCC;
     const day = 86400000;
 
     const items = [];
-    const mk = (id, name, email, number, category, status, exp, location, ago) => items.push({id, name, email, number, category, status, expiryDate: exp === null ? null : offsetDate(exp), location, createdBy: "Admin", updatedBy: id % 2 ? "Admin" : "", createdAt: Date.now() - ago * day});
-    mk(1, "University Registrar", "registrar@ucc.edu.ph", "(02) 5310 1234", "Offices", "Active", null, "", 12);
-    mk(2, "Admissions Office", "admissions@ucc.edu.ph", "(02) 5310 1235", "Offices", "Active", 60, "", 11);
-    mk(3, "Public Information Office", "pio@ucc.edu.ph", "(02) 5310 1236", "Offices", "Active", null, "", 10);
-    mk(4, "Student Affairs", "studentaffairs@ucc.edu.ph", "(02) 5310 1237", "Offices", "Hidden", null, "", 9);
-    mk(5, "IT Services", "itservices@ucc.edu.ph", "(02) 5310 1238", "Offices", "Active", null, "", 8);
+    const mk = (id, name, email, number, category, status, location, ago) => items.push({id, name, email, number, category, status, location, createdBy: "Admin", updatedBy: id % 2 ? "Admin" : "", createdAt: Date.now() - ago * day});
+    mk(1, "University Registrar", "registrar@ucc.edu.ph", "(02) 5310 1234", "Offices", "Active", "", 12);
+    mk(2, "Admissions Office", "admissions@ucc.edu.ph", "(02) 5310 1235", "Offices", "Active", "", 11);
+    mk(3, "Public Information Office", "pio@ucc.edu.ph", "(02) 5310 1236", "Offices", "Active", "", 10);
+    mk(4, "Student Affairs", "studentaffairs@ucc.edu.ph", "(02) 5310 1237", "Offices", "Hidden", "", 9);
+    mk(5, "IT Services", "itservices@ucc.edu.ph", "(02) 5310 1238", "Offices", "Active", "", 8);
 
-    // FIX: these were missing in the original file
     let nextId = 200, editingId = null;
+
+    const statusClass = s => ({Active: "contact-status-active", Hidden: "contact-status-hidden"}[s] || "contact-status-hidden");
 
     const formModal = $("contactFormModal"), previewModal = $("contactPreviewModal"), form = $("contactForm");
 
@@ -20,26 +21,31 @@
     const table = list({
         items: () => items,
         tbody: $("contactTableBody"), search: $("contactSearch"), filter: $("statusFilter"),
-        more: $("showMoreContacts"), end: $("contactEndMessage"), count: $("contactCountLabel"),
+        count: $("contactCountLabel"),
+        pageSize: 10,
+        pager: {
+            nav: $("contactsPagination"), prev: $("contactsPrevPage"), next: $("contactsNextPage"),
+            numbers: $("contactsPageNumbers"), total: $("contactsPageTotal")
+        },
         cols: 6, emptyText: "No contacts found.",
         countLabel: n => n + (n === 1 ? " Contact" : " Contacts"),
         match: (it, q) => {
             const cat = $("categoryFilter").value;
             return (!cat || it.category === cat) && (it.name + " " + it.email + " " + it.number + " " + it.category).toLowerCase().includes(q);
         },
-        filterFn: (it, f) => !f || effectiveStatus(it) === f,
+        filterFn: (it, f) => !f || it.status === f,
         defaultSort: (a, b) => a.id - b.id,
         row: it => `
             <tr data-id="${it.id}">
-                <td class="post-title-cell"><span class="cell-ellipsis" title="${esc(it.name)}">${esc(it.name)}</span></td>
+                <td><span class="contact-cell-ellipsis contact-name" title="${esc(it.name)}">${esc(it.name)}</span></td>
                 <td>${esc(it.email)}</td>
                 <td>${esc(it.number)}</td>
-                <td><span class="category-text">${esc(it.category)}</span></td>
-                <td><span class="status-badge ${statusClass(effectiveStatus(it))}">${esc(effectiveStatus(it))}</span></td>
-                <td><div class="action-buttons">
-                    <button type="button" class="action-btn" data-action="preview" title="View contact" aria-label="View ${esc(it.name)}"><i data-lucide="eye"></i></button>
-                    <button type="button" class="action-btn edit" data-action="edit" title="Edit contact" aria-label="Edit ${esc(it.name)}"><i data-lucide="pencil"></i></button>
-                    <button type="button" class="action-btn delete" data-action="delete" title="Delete contact" aria-label="Delete ${esc(it.name)}"><i data-lucide="trash-2"></i></button>
+                <td><span class="contact-category">${esc(it.category)}</span></td>
+                <td><span class="contact-status ${statusClass(it.status)}">${esc(it.status)}</span></td>
+                <td><div class="contact-actions">
+                    <button type="button" class="contact-action-btn" data-action="preview" title="View contact" aria-label="View ${esc(it.name)}"><i data-lucide="eye"></i></button>
+                    <button type="button" class="contact-action-btn contact-action-edit" data-action="edit" title="Edit contact" aria-label="Edit ${esc(it.name)}"><i data-lucide="pencil"></i></button>
+                    <button type="button" class="contact-action-btn contact-action-delete" data-action="delete" title="Delete contact" aria-label="Delete ${esc(it.name)}"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`,
         onAction: async (action, id) => {
@@ -64,7 +70,6 @@
         $("contactName").value = it ? it.name : "";
         $("contactEmail").value = it ? it.email : "";
         $("contactNumber").value = it ? it.number : "";
-        $("expiryDate").value = it && it.expiryDate ? it.expiryDate : "";
         $("contactLocation").value = it ? it.location : "";
         toggleLocation();
         openModal(formModal);
@@ -74,9 +79,9 @@
 
     function showPreview(it) {
         $("previewContactName").textContent = it.name || "Contact name";
-        const shown = effectiveStatus(it);
+        const shown = it.status;
         const badge = $("previewContactStatus");
-        badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
+        badge.textContent = shown; badge.className = "contact-status " + statusClass(shown);
         $("previewContactCategory").textContent = it.category;
         $("previewContactEmail").textContent = it.email || "—";
         $("previewContactNumber").textContent = it.number || "—";
@@ -100,7 +105,7 @@
     const readForm = () => ({
         category: $("contactCategory").value, status: $("contactStatus").value, name: $("contactName").value.trim(),
         email: $("contactEmail").value.trim(), number: $("contactNumber").value.trim(),
-        expiryDate: $("expiryDate").value || null, location: $("contactLocation").value.trim()
+        location: $("contactLocation").value.trim()
     });
 
     $("openContactForm").addEventListener("click", () => openForm(null));

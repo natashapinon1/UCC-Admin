@@ -74,41 +74,94 @@
         return {set, get: () => data, reset: () => { set(""); o.fileInput.value = ""; }};
     }
 
-    function list(c) {
-        let showingAll = false;
-        const pageSize = c.pageSize || 10;
+    function pageList(cur, last) {
+        if (last <= 7) return Array.from({length: last}, (_, i) => i + 1);
+        const out = [1], s = Math.max(2, cur - 1), e = Math.min(last - 1, cur + 1);
+        if (s > 2) out.push("...");
+        for (let i = s; i <= e; i++) out.push(i);
+        if (e < last - 1) out.push("...");
+        out.push(last);
+        return out;
+    }
 
+    function list(c) {
+        let showingAll = false, page = 1;
+        const pageSize = c.pageSize || 10;
+        const pg = c.pager || null; 
+
+        function renderPager(totalRows) {
+            const last = Math.max(1, Math.ceil(totalRows / pageSize));
+            pg.nav.hidden = totalRows === 0;
+            pg.numbers.innerHTML = "";
+            pageList(page, last).forEach(p => {
+                if (p === "...") {
+                    const s = document.createElement("span");
+                    s.className = "page-ellipsis"; s.textContent = "…";
+                    pg.numbers.appendChild(s);
+                    return;
+                }
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "page-btn" + (p === page ? " active" : "");
+                b.textContent = p;
+                b.setAttribute("aria-label", "Page " + p);
+                if (p === page) b.setAttribute("aria-current", "page");
+                b.addEventListener("click", () => { page = p; render(); });
+                pg.numbers.appendChild(b);
+            });
+            pg.prev.disabled = page <= 1;
+            pg.next.disabled = page >= last;
+            pg.total.textContent = last + (last === 1 ? " page" : " pages");
+        }
         function render() {
             const q = c.search ? c.search.value.trim().toLowerCase() : "";
             const f = c.filter ? c.filter.value : "";
             const rows = c.items().filter(it => c.match(it, q) && (!c.filterFn || c.filterFn(it, f)));
             const sorter = c.sort && c.sorters ? c.sorters[c.sort.value] : null;
             rows.sort(sorter || c.defaultSort || (() => 0));
-            const visible = showingAll ? rows : rows.slice(0, pageSize);
+
+            let visible;
+            if (pg) {
+                const last = Math.max(1, Math.ceil(rows.length / pageSize));
+                if (page > last) page = last;
+                visible = rows.slice((page - 1) * pageSize, page * pageSize);
+            } else {
+                visible = showingAll ? rows : rows.slice(0, pageSize);
+            }
 
             c.tbody.innerHTML = rows.length
                 ? visible.map(c.row).join("")
                 : '<tr><td colspan="' + c.cols + '" class="empty-row">' + esc(c.emptyText) + '</td></tr>';
             c.count.textContent = c.countLabel(rows.length);
 
-            const more = rows.length > pageSize;
-            if (c.less) {
-                c.more.hidden = !more || showingAll;
-                c.less.hidden = !more || !showingAll;
+            if (pg) {
+                renderPager(rows.length);
             } else {
-                c.more.hidden = !more;
-                c.more.textContent = showingAll ? "Show less" : "Show more";
+                const more = rows.length > pageSize;
+                if (c.less) {
+                    c.more.hidden = !more || showingAll;
+                    c.less.hidden = !more || !showingAll;
+                } else {
+                    c.more.hidden = !more;
+                    c.more.textContent = showingAll ? "Show less" : "Show more";
+                }
+                c.end.hidden = !(rows.length > 0 && (!more || showingAll));
             }
-            c.end.hidden = !(rows.length > 0 && (!more || showingAll));
             icons();
         }
 
-        const reset = () => { showingAll = false; render(); };
+        const reset = () => { showingAll = false; page = 1; render(); };
         if (c.search) c.search.addEventListener("input", reset);
         if (c.filter) c.filter.addEventListener("change", reset);
         if (c.sort) c.sort.addEventListener("change", reset);
-        c.more.addEventListener("click", () => { showingAll = c.less ? true : !showingAll; render(); });
-        if (c.less) c.less.addEventListener("click", () => { showingAll = false; render(); });
+
+        if (pg) {
+            pg.prev.addEventListener("click", () => { if (page > 1) { page--; render(); } });
+            pg.next.addEventListener("click", () => { page++; render(); });
+        } else {
+            c.more.addEventListener("click", () => { showingAll = c.less ? true : !showingAll; render(); });
+            if (c.less) c.less.addEventListener("click", () => { showingAll = false; render(); });
+        }
 
         c.tbody.addEventListener("click", e => {
             const btn = e.target.closest("[data-action]");

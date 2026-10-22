@@ -13,7 +13,7 @@
 	const pageSize = 10;
 
 	const tbody = $("borTableBody"), search = $("borSearch"), statusFilter = $("borStatusFilter"), orderFilter = $("borOrderFilter");
-	const formModal = $("borModal"), previewModal = $("borPreviewModal"), viewModal = $("borViewModal"), form = $("borForm"), photoFile = $("borPhoto");
+	const formModal = $("borModal"), previewModal = $("borPreviewModal"), form = $("borForm"), photoFile = $("borPhoto");
 
 	const esc = v => String(v).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 	const initials = name => (name.trim().split(/\s+/).filter(w => /^[A-Za-z]/.test(w) && !/^(Dr|Atty|Mr|Mrs|Ms|Hon|Engr|Prof)\.?$/i.test(w)).slice(0, 2).map(w => w[0]).join("") || "RG").toUpperCase();
@@ -22,7 +22,47 @@
 	const icons = () => { if (window.lucide) lucide.createIcons(); };
 
 	const effectiveStatus = r => (r.status === "Active" && r.expiryDate && r.expiryDate < dayStr(0)) ? "Expired" : r.status;
-	const statusClass = s => s === "Active" ? "status-published" : (s === "Expired" ? "status-expired-person" : "status-hidden-person");
+	const statusClass = s => s === "Active" ? "regents-status-active" : (s === "Expired" ? "regents-status-expired" : "regents-status-hidden");
+
+	const pager = {
+		nav: $("borPagination"), prev: $("borPrevPage"), next: $("borNextPage"),
+		numbers: $("borPageNumbers"), total: $("borPageTotal")
+	};
+
+	function pageList(cur, last) {
+		if (last <= 7) return Array.from({length: last}, (_, i) => i + 1);
+		const out = [1], s = Math.max(2, cur - 1), e = Math.min(last - 1, cur + 1);
+		if (s > 2) out.push("...");
+		for (let i = s; i <= e; i++) out.push(i);
+		if (e < last - 1) out.push("...");
+		out.push(last);
+		return out;
+	}
+
+	function renderPager(totalRows) {
+		const last = Math.max(1, Math.ceil(totalRows / pageSize));
+		pager.nav.hidden = totalRows === 0;
+		pager.numbers.innerHTML = "";
+		pageList(page, last).forEach(p => {
+			if (p === "...") {
+				const s = document.createElement("span");
+				s.className = "regents-page-ellipsis"; s.textContent = "…";
+				pager.numbers.appendChild(s);
+				return;
+			}
+			const b = document.createElement("button");
+			b.type = "button";
+			b.className = "regents-page-btn" + (p === page ? " active" : "");
+			b.textContent = p;
+			b.setAttribute("aria-label", "Page " + p);
+			if (p === page) b.setAttribute("aria-current", "page");
+			b.addEventListener("click", () => { page = p; render(); });
+			pager.numbers.appendChild(b);
+		});
+		pager.prev.disabled = page <= 1;
+		pager.next.disabled = page >= last;
+		pager.total.textContent = last + (last === 1 ? " page" : " pages");
+	}
 
 	function toast(message) {
 		const t = $("borToast"); t.textContent = message; t.classList.add("show");
@@ -40,32 +80,29 @@
 			if (mode === "name") return a.name.localeCompare(b.name);
 			return a.order - b.order;
 		});
-		const pages = Math.max(1, Math.ceil(list.length / pageSize));
-		if (page > pages) page = pages;
+		const last = Math.max(1, Math.ceil(list.length / pageSize));
+		if (page > last) page = last;
 		const visible = list.slice((page - 1) * pageSize, page * pageSize);
 
 		tbody.innerHTML = visible.map(r => `
 			<tr data-id="${r.id}">
-				<td><div class="person-thumb">${r.photo ? `<img src="${r.photo}" alt="">` : esc(initials(r.name))}</div></td>
-				<td class="post-title-cell"><span class="cell-ellipsis person-name" title="${esc(r.name)}">${esc(r.name)}</span></td>
-				<td><span class="cell-ellipsis" title="${esc(r.position)}">${esc(r.position)}</span></td>
-				<td><span class="cell-ellipsis">${r.order}</span></td>
-				<td><span class="status-badge ${statusClass(effectiveStatus(r))}">${esc(effectiveStatus(r))}</span></td>
-				<td><div class="action-buttons">
-					<button class="action-btn" data-action="view" type="button" title="View details" aria-label="View ${esc(r.name)}"><i data-lucide="eye"></i></button>
-					<button class="action-btn edit" data-action="edit" type="button" title="Edit regent" aria-label="Edit ${esc(r.name)}"><i data-lucide="pencil"></i></button>
-					<button class="action-btn archive" data-action="delete" type="button" title="Delete regent" aria-label="Delete ${esc(r.name)}"><i data-lucide="trash-2"></i></button>
+				<td><div class="regents-thumb">${r.photo ? `<img src="${r.photo}" alt="">` : esc(initials(r.name))}</div></td>
+				<td><span class="regents-cell-ellipsis regents-name-text" title="${esc(r.name)}">${esc(r.name)}</span></td>
+				<td><span class="regents-cell-ellipsis" title="${esc(r.position)}">${esc(r.position)}</span></td>
+				<td><span class="regents-cell-ellipsis">${r.order}</span></td>
+				<td><span class="regents-status ${statusClass(effectiveStatus(r))}">${esc(effectiveStatus(r))}</span></td>
+				<td><div class="regents-actions">
+					<button class="regents-action-btn" data-action="view" type="button" title="View details" aria-label="View ${esc(r.name)}"><i data-lucide="eye"></i></button>
+					<button class="regents-action-btn regents-action-edit" data-action="edit" type="button" title="Edit regent" aria-label="Edit ${esc(r.name)}"><i data-lucide="pencil"></i></button>
+					<button class="regents-action-btn regents-action-delete" data-action="delete" type="button" title="Delete regent" aria-label="Delete ${esc(r.name)}"><i data-lucide="trash-2"></i></button>
 				</div></td>
 			</tr>`).join("");
 
 		$("tableBorCount").textContent = list.length + (list.length === 1 ? " regent" : " regents");
 		$("borEmpty").hidden = list.length !== 0;
-
-		$("borPagination").innerHTML = pages > 1 ? Array.from({length: pages}, (_, i) => `<button type="button" class="post-btn ${i + 1 === page ? "post-btn-primary" : "post-btn-ghost"}" data-page="${i + 1}">${i + 1}</button>`).join("") : "";
-		$("borEndMessage").hidden = !(pages > 1 && page === pages);
+		renderPager(list.length);
 		icons();
 	}
-	function resetAndRender() { page = 1; render(); }
 
 	function setPhoto(src) {
 		photoData = src || "";
@@ -102,32 +139,27 @@
 		editingId = null; form.reset(); photoFile.value = ""; setPhoto("");
 	}
 
-	function fillModal(ids, r) {
-		$(ids.name).textContent = r.name || "Regent Name";
-		$(ids.position).textContent = r.position || "";
-		const shown = effectiveStatus(r), badge = $(ids.status);
-		badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
-		$(ids.bio).textContent = r.bio || "No biography provided.";
-		$(ids.order).textContent = "Display order: " + (r.order || "—");
+	function openPreview(r, title) {
+		$("borPreviewHeading").textContent = title;
+		$("borPreviewName").textContent = r.name || "Regent Name";
+		$("borPreviewPosition").textContent = r.position || "";
+		const shown = effectiveStatus(r), badge = $("borPreviewStatus");
+		badge.textContent = shown; badge.className = "regents-status " + statusClass(shown);
+		$("borPreviewBio").textContent = r.bio || "No biography provided.";
+		$("borPreviewOrder").textContent = "Display order: " + (r.order || "—");
 
-		const img = $(ids.image), ini = $(ids.initials);
+		const img = $("borPreviewImage"), ini = $("borPreviewInitials");
 		ini.textContent = initials(r.name || "");
 		if (r.photo) { img.src = r.photo; img.hidden = false; ini.hidden = true; }
 		else { img.removeAttribute("src"); img.hidden = true; ini.hidden = false; }
 
-		$(ids.created).textContent = r.createdBy || "Admin";
-		$(ids.date).textContent = fmtDate(r.createdAt);
-		$(ids.updated).textContent = r.updatedBy || r.createdBy || "—";
-		$(ids.expiry).textContent = fmtDay(r.expiryDate);
+		$("borPreviewCreatedBy").textContent = r.createdBy || "Admin";
+		$("borPreviewDateCreated").textContent = fmtDate(r.createdAt);
+		$("borPreviewLastUpdatedBy").textContent = r.updatedBy || r.createdBy || "—";
+		$("borPreviewExpiry").textContent = fmtDay(r.expiryDate);
+		previewModal.classList.add("open"); previewModal.setAttribute("aria-hidden", "false"); icons();
 	}
-	const previewIds = {name:"borPreviewName", position:"borPreviewPosition", status:"borPreviewStatus", bio:"borPreviewBio", order:"borPreviewOrder", image:"borPreviewImage", initials:"borPreviewInitials", created:"borPreviewCreatedBy", date:"borPreviewDateCreated", updated:"borPreviewLastUpdatedBy", expiry:"borPreviewExpiry"};
-	const viewIds = {name:"borViewName", position:"borViewPosition", status:"borViewStatus", bio:"borViewBio", order:"borViewOrder", image:"borViewImage", initials:"borViewInitials", created:"borViewCreatedBy", date:"borViewDateCreated", updated:"borViewLastUpdatedBy", expiry:"borViewExpiry"};
-
-	function openModal(modal, ids, r) {
-		fillModal(ids, r);
-		modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); icons();
-	}
-	function closeModal(modal) { modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); }
+	function closePreview() { previewModal.classList.remove("open"); previewModal.setAttribute("aria-hidden", "true"); }
 
 	async function deleteRegent(r) {
 		let confirmed;
@@ -143,25 +175,23 @@
 	}
 
 	$("addBorBtn").addEventListener("click", () => openForm(null));
-	search.addEventListener("input", resetAndRender);
-	[statusFilter, orderFilter].forEach(el => el.addEventListener("change", resetAndRender));
-	$("borPagination").addEventListener("click", e => {
-		const b = e.target.closest("[data-page]"); if (!b) return;
-		page = Number(b.dataset.page); render();
-	});
+	search.addEventListener("input", () => { page = 1; render(); });
+	[statusFilter, orderFilter].forEach(el => el.addEventListener("change", () => { page = 1; render(); }));
+	pager.prev.addEventListener("click", () => { if (page > 1) { page--; render(); } });
+	pager.next.addEventListener("click", () => { page++; render(); });
 
 	tbody.addEventListener("click", e => {
 		const btn = e.target.closest("[data-action]"); if (!btn) return;
 		const row = btn.closest("tr[data-id]"); if (!row) return;
 		const r = regents.find(x => x.id === Number(row.dataset.id)); if (!r) return;
-		if (btn.dataset.action === "view") openModal(viewModal, viewIds, r);
+		if (btn.dataset.action === "view") openPreview(r, "Regent Details");
 		if (btn.dataset.action === "edit") openForm(r);
 		if (btn.dataset.action === "delete") deleteRegent(r);
 	});
 
 	document.querySelectorAll("[data-close-bor-modal]").forEach(b => b.addEventListener("click", closeForm));
-	document.querySelectorAll("[data-close-bor-preview]").forEach(b => b.addEventListener("click", () => closeModal(previewModal)));
-	document.querySelectorAll("[data-close-bor-view]").forEach(b => b.addEventListener("click", () => closeModal(viewModal)));
+	document.querySelectorAll("[data-close-bor-preview]").forEach(b => b.addEventListener("click", closePreview));
+	$("cancelBorBtn").addEventListener("click", closeForm);
 
 	$("chooseBorPhotoBtn").addEventListener("click", () => photoFile.click());
 	$("removeBorPhoto").addEventListener("click", () => { setPhoto(""); photoFile.value = ""; });
@@ -169,12 +199,12 @@
 
 	$("previewBorFormBtn").addEventListener("click", () => {
 		const existing = editingId !== null ? regents.find(x => x.id === editingId) : null;
-		openModal(previewModal, previewIds, {
+		openPreview({
 			name: $("borName").value.trim(), position: $("borPosition").value.trim(), bio: $("borBio").value.trim(),
 			order: Number($("borOrder").value) || 1, status: $("borStatus").value, photo: photoData, expiryDate: $("borExpiryDate").value || null,
 			createdBy: existing ? existing.createdBy : "Admin", createdAt: existing ? existing.createdAt : Date.now(),
 			updatedBy: existing ? existing.updatedBy : "Admin"
-		});
+		}, "Regent Preview");
 	});
 
 	form.addEventListener("submit", e => {
@@ -192,15 +222,17 @@
 			regents.push({id: nextId++, createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now(), ...data});
 			toast("Regent added.");
 		}
-		resetAndRender(); closeForm();
+		page = 1; render(); closeForm();
 	});
 
 	document.addEventListener("keydown", e => {
 		if (e.key !== "Escape") return;
-		if (previewModal.classList.contains("open")) closeModal(previewModal);
-		else if (viewModal.classList.contains("open")) closeModal(viewModal);
+		if (previewModal.classList.contains("open")) closePreview();
 		else if (formModal.classList.contains("open")) closeForm();
 	});
 
 	render();
 })();
+
+loadSharedLayout();
+if (window.lucide) { lucide.createIcons(); }

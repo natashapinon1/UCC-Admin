@@ -8,7 +8,7 @@
 		{id:2, unit:"College of Business and Accountancy", title:"CBA Students Win Regional Business Plan Competition", excerpt:"A team of business students took first place at the regional business plan competition.", image:"", publishDate:dayStr(-3), status:"Published", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 4 * day},
 		{id:3, unit:"College of Education", title:"Education Faculty Launches Teaching Workshop Series", excerpt:"A series of workshops on modern teaching strategies will begin next month for all education students.", image:"", publishDate:dayStr(4), status:"Draft", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 2 * day}
 	];
-	let nextId = 4, editingId = null, imageData = "", showingAll = false;
+	let nextId = 4, editingId = null, imageData = "", page = 1;
 	const pageSize = 10;
 
 	const tbody = $("newsTableBody"), search = $("newsSearch"), unitFilter = $("newsUnitFilter"), statusFilter = $("newsStatusFilter"), sortSel = $("newsSort");
@@ -19,11 +19,51 @@
 	const fmtDay = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US", {year:"numeric", month:"short", day:"numeric"}) : "—";
 	const icons = () => { if (window.lucide) lucide.createIcons(); };
 
+	const pager = {
+		nav: $("newsPagination"), prev: $("newsPrevPage"), next: $("newsNextPage"),
+		numbers: $("newsPageNumbers"), total: $("newsPageTotal")
+	};
+
+	function pageList(cur, last) {
+		if (last <= 7) return Array.from({length: last}, (_, i) => i + 1);
+		const out = [1], s = Math.max(2, cur - 1), e = Math.min(last - 1, cur + 1);
+		if (s > 2) out.push("...");
+		for (let i = s; i <= e; i++) out.push(i);
+		if (e < last - 1) out.push("...");
+		out.push(last);
+		return out;
+	}
+
+	function renderPager(totalRows) {
+		const last = Math.max(1, Math.ceil(totalRows / pageSize));
+		pager.nav.hidden = totalRows === 0;
+		pager.numbers.innerHTML = "";
+		pageList(page, last).forEach(p => {
+			if (p === "...") {
+				const s = document.createElement("span");
+				s.className = "unitnews-page-ellipsis"; s.textContent = "…";
+				pager.numbers.appendChild(s);
+				return;
+			}
+			const b = document.createElement("button");
+			b.type = "button";
+			b.className = "unitnews-page-btn" + (p === page ? " active" : "");
+			b.textContent = p;
+			b.setAttribute("aria-label", "Page " + p);
+			if (p === page) b.setAttribute("aria-current", "page");
+			b.addEventListener("click", () => { page = p; render(); });
+			pager.numbers.appendChild(b);
+		});
+		pager.prev.disabled = page <= 1;
+		pager.next.disabled = page >= last;
+		pager.total.textContent = last + (last === 1 ? " page" : " pages");
+	}
+
 	const todayStr = () => dayStr(0);
-	const statusClass = s => s === "Published" ? "status-published" : "status-draft-news";
+	const statusClass = s => s === "Published" ? "unitnews-status-published" : "unitnews-status-draft";
 
 	function toast(message) {
-		const t = $("uiToast"); t.textContent = message; t.classList.add("show");
+		const t = $("newsToast"); t.textContent = message; t.classList.add("show");
 		clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 2400);
 	}
 
@@ -40,28 +80,28 @@
 			if (mode === "title-desc") return b.title.localeCompare(a.title);
 			return b.createdAt - a.createdAt;
 		});
-		const visible = showingAll ? list : list.slice(0, pageSize);
+		const last = Math.max(1, Math.ceil(list.length / pageSize));
+		if (page > last) page = last;
+		const visible = list.slice((page - 1) * pageSize, page * pageSize);
 
 		tbody.innerHTML = visible.map(n => `
 			<tr data-id="${n.id}">
-				<td><div class="featured-thumb">${n.image ? `<img src="${n.image}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
-				<td class="post-title-cell"><span class="cell-ellipsis news-title-text" title="${esc(n.title)}">${esc(n.title)}</span></td>
-				<td><span class="cell-ellipsis" title="${esc(n.unit)}">${esc(n.unit)}</span></td>
-				<td><span class="news-excerpt" title="${esc(n.excerpt)}">${esc(n.excerpt)}</span></td>
-				<td><span class="cell-ellipsis">${esc(fmtDay(n.publishDate))}</span></td>
-				<td><span class="status-badge ${statusClass(n.status)}">${esc(n.status)}</span></td>
-				<td><div class="action-buttons">
-					<button class="action-btn" data-action="preview" type="button" title="Preview" aria-label="Preview ${esc(n.title)}"><i data-lucide="eye"></i></button>
-					<button class="action-btn edit" data-action="edit" type="button" title="Edit" aria-label="Edit ${esc(n.title)}"><i data-lucide="pencil"></i></button>
-					<button class="action-btn archive" data-action="delete" type="button" title="Delete" aria-label="Delete ${esc(n.title)}"><i data-lucide="trash-2"></i></button>
+				<td><div class="unitnews-thumb">${n.image ? `<img src="${n.image}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
+				<td><span class="unitnews-cell-ellipsis unitnews-title-text" title="${esc(n.title)}">${esc(n.title)}</span></td>
+				<td><span class="unitnews-cell-ellipsis" title="${esc(n.unit)}">${esc(n.unit)}</span></td>
+				<td><span class="unitnews-excerpt" title="${esc(n.excerpt)}">${esc(n.excerpt)}</span></td>
+				<td><span class="unitnews-cell-ellipsis">${esc(fmtDay(n.publishDate))}</span></td>
+				<td><span class="unitnews-status ${statusClass(n.status)}">${esc(n.status)}</span></td>
+				<td><div class="unitnews-actions">
+					<button class="unitnews-action-btn" data-action="preview" type="button" title="Preview" aria-label="Preview ${esc(n.title)}"><i data-lucide="eye"></i></button>
+					<button class="unitnews-action-btn unitnews-action-edit" data-action="edit" type="button" title="Edit" aria-label="Edit ${esc(n.title)}"><i data-lucide="pencil"></i></button>
+					<button class="unitnews-action-btn unitnews-action-delete" data-action="delete" type="button" title="Delete" aria-label="Delete ${esc(n.title)}"><i data-lucide="trash-2"></i></button>
 				</div></td>
 			</tr>`).join("");
 
 		$("newsCount").textContent = list.length + (list.length === 1 ? " item" : " items");
 		$("newsEmpty").hidden = list.length !== 0;
-		$("newsShowMore").hidden = list.length <= pageSize;
-		$("newsShowMore").textContent = showingAll ? "Show less" : "Show more";
-		$("newsEndMessage").hidden = !(list.length > pageSize && showingAll);
+		renderPager(list.length);
 		icons();
 	}
 
@@ -103,7 +143,7 @@
 		$("previewNewsUnit").textContent = n.unit || "Unit name";
 		$("previewNewsTitle").textContent = n.title || "News title";
 		const shown = n.status, badge = $("previewNewsStatus");
-		badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
+		badge.textContent = shown; badge.className = "unitnews-status " + statusClass(shown);
 		$("previewNewsDate").textContent = n.publishDate ? "Publish date: " + fmtDay(n.publishDate) : "—";
 		$("previewNewsExcerpt").textContent = n.excerpt || "";
 
@@ -132,9 +172,10 @@
 	}
 
 	$("addNewsBtn").addEventListener("click", () => openForm(null));
-	search.addEventListener("input", () => { showingAll = false; render(); });
-	[unitFilter, statusFilter, sortSel].forEach(el => el.addEventListener("change", () => { showingAll = false; render(); }));
-	$("newsShowMore").addEventListener("click", () => { showingAll = !showingAll; render(); });
+	search.addEventListener("input", () => { page = 1; render(); });
+	[unitFilter, statusFilter, sortSel].forEach(el => el.addEventListener("change", () => { page = 1; render(); }));
+	pager.prev.addEventListener("click", () => { if (page > 1) { page--; render(); } });
+	pager.next.addEventListener("click", () => { page++; render(); });
 
 	tbody.addEventListener("click", e => {
 		const btn = e.target.closest("[data-action]"); if (!btn) return;
@@ -180,7 +221,7 @@
 			news.push({id: nextId++, createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now(), ...data});
 			toast("Unit news added.");
 		}
-		showingAll = false; render(); closeForm();
+		page = 1; render(); closeForm();
 	});
 
 	document.addEventListener("keydown", e => {

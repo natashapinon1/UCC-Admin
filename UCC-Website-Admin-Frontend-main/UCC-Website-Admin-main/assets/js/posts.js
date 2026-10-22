@@ -25,9 +25,14 @@
     const img = imageField({fileInput: $("featuredImage"), chooseBtn: $("uploadImageBtn"), removeBtn: $("removeImageBtn"), preview: $("imagePreview"), placeholder: $("uploadPlaceholder")});
 
     const table = list({
-        items: () => items,
+         items: () => items,
         tbody: $("postsTableBody"), search: $("postSearch"), filter: $("postFilter"), sort: $("postSort"),
-        more: $("showMorePostsBtn"), end: $("postsEndMessage"), count: $("postsCount"),
+        count: $("postsCount"),
+        pageSize: 10,
+        pager: {
+            nav: $("postsPagination"), prev: $("prevPageBtn"), next: $("nextPageBtn"),
+            numbers: $("pageNumbers"), total: $("pageTotal")
+        },
         cols: 7, emptyText: "No posts found.",
         countLabel: n => n + (n === 1 ? " post" : " posts"),
         match: (it, q) => (it.title + " " + it.category + " " + it.excerpt).toLowerCase().includes(q),

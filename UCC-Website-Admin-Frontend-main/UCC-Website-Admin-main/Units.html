@@ -10,131 +10,134 @@
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="assets/css/posts.css">
-
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/unit.css">
 </head>
 <body data-page-title="Units">
 <div class="dashboard-layout">
     <div id="sidebar-container"></div>
   <main class="main-content">
       <div id="header-container"></div>
-            <section class="posts-page">
-            <div class="posts-intro">
+            <section class="units-page">
+            <div class="units-intro">
                 <div>
                     <p>Manage university units, dean information, logos, and publication status on this page.</p>
                 </div>
             </div>
 
-            <div class="posts-toolbar">
-                <div class="posts-tools-left">
-                    <div class="posts-search">
+            <div class="units-toolbar">
+                <div class="units-tools-left">
+                    <div class="units-search">
                         <input type="search" id="unitSearch" placeholder="Search units..." aria-label="Search units">
                         <i data-lucide="search"></i>
                     </div>
 
-                    <select id="unitStatusFilter" class="posts-filter" aria-label="Filter units by status">
+                    <select id="unitStatusFilter" class="units-filter" aria-label="Filter units by status">
                         <option value="All">All statuses</option>
                         <option value="Active">Active</option>
                         <option value="Hidden">Hidden</option>
                     </select>
 
-                    <select id="unitSort" class="posts-filter" aria-label="Sort units">
+                    <select id="unitSort" class="units-filter" aria-label="Sort units">
                         <option value="name-asc">Name: A to Z</option>
                         <option value="name-desc">Name: Z to A</option>
                         <option value="newest">Newest added</option>
                         <option value="oldest">Oldest added</option>
-                        
                     </select>
                 </div>
-                <button type="button" id="addUnitBtn" class="post-btn post-btn-primary"><i data-lucide="plus"></i> Add Unit</button>
+                <button type="button" id="addUnitBtn" class="unit-btn unit-btn-primary"><i data-lucide="plus"></i> Add Unit</button>
             </div>
 
-            <div class="posts-card">
-                <div class="posts-card-head">
+            <div class="units-card">
+                <div class="units-card-head">
                     <h2>Units</h2>
-                    <span id="unitCount" class="posts-count">0 units</span>
+                    <span id="unitCount" class="units-count">0 units</span>
                 </div>
-                <div class="posts-table-wrap">
-                    <table class="posts-table">
+                <div class="units-table-wrap">
+                    <table class="units-table">
                         <thead>
                             <tr>
-                                <th class="col-image">Logo</th>
-                                <th class="col-title">Unit Name</th>
-                                <th class="col-category">Dean</th>
-                                <th class="col-status">Status</th>
-                                <th class="col-actions">Actions</th>
+                                <th>Logo</th>
+                                <th>Unit Name</th>
+                                <th>Dean</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="unitsTableBody"></tbody>
                     </table>
                 </div>
-                <div id="unitsEmpty" class="empty-row" style="text-align:center; padding: 42px;" hidden>
-                    <i data-lucide="building-2" style="width: 48px; height: 48px; margin-bottom: 12px; color: #7a847f;"></i>
-                    <h3 style="margin-bottom: 8px; color: #0d2a21;">No units found</h3>
-                    <p style="color: #6d7873;">Try a different search term or status filter.</p>
+                <div id="unitsEmpty" class="unit-empty" hidden>
+                    <i data-lucide="building-2"></i>
+                    <h3>No units found</h3>
+                    <p>Try a different search term or status filter.</p>
                 </div>
             </div>
 
-            <div class="posts-list-controls">
-                <button class="units" id="unitsShowMore" class="posts-show-more" hidden>Show more</button>
-                <p id="unitsEndMessage" class="posts-end-message" hidden>-- No more items --</p>
-            </div>
+            <nav class="units-pagination" id="unitsPagination" aria-label="Units pagination" hidden>
+                <button class="unit-page-btn" id="unitsPrevPage" type="button" aria-label="Previous page">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+                <div class="unit-page-numbers" id="unitsPageNumbers"></div>
+                <button class="unit-page-btn" id="unitsNextPage" type="button" aria-label="Next page">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+                <span class="unit-page-total" id="unitsPageTotal">1 page</span>
+            </nav>
 
-
-            <div id="unitFormModal" class="post-modal" aria-hidden="true">
-                <div class="post-modal-backdrop" data-close-unit-form></div>
-                <div class="post-modal-panel" role="dialog" aria-modal="true" aria-labelledby="unitFormTitle">
-                    <div class="post-modal-head">
+            <div id="unitFormModal" class="unit-modal" aria-hidden="true">
+                <div class="unit-modal-backdrop" data-close-unit-form></div>
+                <div class="unit-modal-panel" role="dialog" aria-modal="true" aria-labelledby="unitFormTitle">
+                    <div class="unit-modal-head">
                         <div>
                             <h2 id="unitFormTitle">Add Unit</h2>
-                            <p id="postFormDescription">Add or update the unit name, logo, dean information, and status.</p>
+                            <p>Add or update the unit name, logo, dean information, and status.</p>
                         </div>
-                        <button type="button" class="modal-close" data-close-unit-form aria-label="Close unit form"><i data-lucide="x"></i></button>
+                        <button type="button" class="unit-modal-close" data-close-unit-form aria-label="Close unit form"><i data-lucide="x"></i></button>
                     </div>
-                    <form id="unitForm" class="post-form" enctype="multipart/form-data">
-                        <div class="image-upload-area">
-                            <div id="unitLogoInitials" class="upload-placeholder"><i data-lucide="image"></i><strong>Unit Logo</strong></div>
-                            <img id="unitLogoPreview" class="image-preview" alt="Unit logo preview">
+                    <form id="unitForm" class="unit-form" enctype="multipart/form-data">
+                        <div class="unit-upload-area">
+                            <div id="unitLogoInitials" class="unit-upload-placeholder"><i data-lucide="image"></i><strong>Unit Logo</strong></div>
+                            <img id="unitLogoPreview" class="unit-image-preview" alt="Unit logo preview">
                             <input id="unitLogoFile" type="file" accept="image/*" hidden>
-                            <button type="button" id="chooseUnitLogoBtn" class="post-btn post-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
-                            <button type="button" id="removeUnitLogo" class="post-btn post-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
-                        </div>
-                        
-                       <div class="form-grid">
-                            <label class="form-field full-width"><span>Unit Name</span><input id="unitName" name="unitName" type="text" maxlength="150" placeholder="Enter unit name" required></label>
+                            <button type="button" id="chooseUnitLogoBtn" class="unit-btn unit-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
+                            <button type="button" id="removeUnitLogo" class="unit-btn unit-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
                         </div>
 
-                        <div class="image-upload-area">
-                            <div id="deanImageInitials" class="upload-placeholder"><i data-lucide="user"></i><strong>Dean's Photo</strong></div>
-                            <img id="deanImagePreview" class="image-preview" alt="Dean image preview">
+                        <div class="unit-form-grid">
+                            <label class="unit-form-field full-width"><span>Unit Name</span><input id="unitName" name="unitName" type="text" maxlength="150" placeholder="Enter unit name" required></label>
+                        </div>
+
+                        <div class="unit-upload-area">
+                            <div id="deanImageInitials" class="unit-upload-placeholder"><i data-lucide="user"></i><strong>Dean's Photo</strong></div>
+                            <img id="deanImagePreview" class="unit-image-preview" alt="Dean image preview">
                             <input id="deanImageFile" type="file" accept="image/*" hidden>
-                            <button type="button" id="chooseDeanImageBtn" class="post-btn post-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
-                            <button type="button" id="removeDeanImage" class="post-btn post-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
+                            <button type="button" id="chooseDeanImageBtn" class="unit-btn unit-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
+                            <button type="button" id="removeDeanImage" class="unit-btn unit-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
                         </div>
 
-                        <div class="form-grid">
-                            <label class="form-field full-width"><span>Dean's Name</span><input id="unitDeanName" name="deanName" type="text" maxlength="150" placeholder="Enter dean's full name" required></label>
-                            <label class="form-field full-width"><span>Status</span><select id="unitStatus" name="status"><option value="Active">Active</option><option value="Hidden">Hidden</option></select></label>
+                        <div class="unit-form-grid">
+                            <label class="unit-form-field full-width"><span>Dean's Name</span><input id="unitDeanName" name="deanName" type="text" maxlength="150" placeholder="Enter dean's full name" required></label>
+                            <label class="unit-form-field full-width"><span>Status</span><select id="unitStatus" name="status"><option value="Active">Active</option><option value="Hidden">Hidden</option></select></label>
                         </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" id="cancelUnitBtn" class="post-btn post-btn-ghost form-cancel">Cancel</button>
-                            <div class="form-actions-right">
-                                <button type="button" id="previewUnitBtn" class="post-btn post-btn-ghost"><i data-lucide="eye"></i> Preview</button>
-                                <button type="submit" class="post-btn post-btn-primary"><i data-lucide="save"></i> Save Unit</button>
+
+                        <div class="unit-form-actions">
+                            <button type="button" id="cancelUnitBtn" class="unit-btn unit-btn-ghost">Cancel</button>
+                            <div class="unit-form-actions-right">
+                                <button type="button" id="previewUnitBtn" class="unit-btn unit-btn-ghost"><i data-lucide="eye"></i> Preview</button>
+                                <button type="submit" class="unit-btn unit-btn-primary"><i data-lucide="save"></i> Save Unit</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div id="unitPreviewModal" class="post-modal preview-modal" aria-hidden="true">
-                <div class="post-modal-backdrop" data-close-unit-preview></div>
-                <article class="post-modal-panel unit-preview-panel" role="dialog" aria-modal="true" aria-labelledby="unitPreviewTitle">
-                    <div class="post-modal-head">
+            <div id="unitPreviewModal" class="unit-modal" aria-hidden="true">
+                <div class="unit-modal-backdrop" data-close-unit-preview></div>
+                <article class="unit-modal-panel unit-preview-panel" role="dialog" aria-modal="true" aria-labelledby="unitPreviewTitle">
+                    <div class="unit-modal-head">
                         <div><h2 id="unitPreviewTitle">Unit Preview</h2></div>
-                        <button type="button" class="modal-close" data-close-unit-preview aria-label="Close preview"><i data-lucide="x"></i></button>
+                        <button type="button" class="unit-modal-close" data-close-unit-preview aria-label="Close preview"><i data-lucide="x"></i></button>
                     </div>
                     <div class="unit-preview-body">
                         <div class="unit-preview-top">
@@ -144,7 +147,7 @@
                             </div>
                             <div>
                                 <h3 id="previewUnitName" class="unit-preview-name">Unit Name</h3>
-                                <span id="previewUnitStatus" class="status-badge status-published">Active</span>
+                                <span id="previewUnitStatus" class="unit-status unit-status-active">Active</span>
                             </div>
                         </div>
                         <div class="unit-preview-dean">
@@ -165,7 +168,7 @@
                     </footer>
                 </article>
             </div>
-            <div class="ui-toast" id="unitsToast" role="status" aria-live="polite"></div>
+            <div class="unit-toast" id="unitsToast" role="status" aria-live="polite"></div>
         </section>
     </main>
 </div>

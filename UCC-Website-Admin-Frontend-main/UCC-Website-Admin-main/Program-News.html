@@ -10,30 +10,29 @@
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="assets/css/posts.css">
-	
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/programnews.css">
 </head>
 <body data-page-title="Program Posts">
 <div class="dashboard-layout">
 	<div id="sidebar-container"></div>
 	<main class="main-content">
 		<div id="header-container"></div>
-		<section class="posts-page">
-			<div class="posts-intro">
+		<section class="programnews-page">
+			<div class="programnews-intro">
 				<div>
 					<p>Manage program-specific news, update announcements, preview content, and control what is published.</p>
 				</div>
 			</div>
 
-			<div class="posts-toolbar">
-				<div class="posts-tools-left">
-					<div class="posts-search">
+			<div class="programnews-toolbar">
+				<div class="programnews-tools-left">
+					<div class="programnews-search">
 						<input type="search" id="pnSearch" placeholder="Search program posts..." aria-label="Search program posts">
 						<i data-lucide="search"></i>
 					</div>
 
-					<select id="programFilter" class="posts-filter" aria-label="Filter by program">
+					<select id="programFilter" class="programnews-filter" aria-label="Filter by program">
 						<option value="All">All programs</option>
 						<option value="BSIT">Bachelor of Science in Information Technology</option>
 						<option value="BSCS">Bachelor of Science in Computer Science</option>
@@ -42,85 +41,91 @@
 						<option value="BSHM">Bachelor of Science in Hospitality Management</option>
 					</select>
 
-					<select id="pnStatusFilter" class="posts-filter" aria-label="Filter by status">
+					<select id="pnStatusFilter" class="programnews-filter" aria-label="Filter by status">
 						<option value="All">All statuses</option>
 						<option value="Draft">Draft</option>
 						<option value="Published">Published</option>
 						<option value="Archived">Archived</option>
 					</select>
 
-					<select id="pnSort" class="posts-filter" aria-label="Sort program posts">
+					<select id="pnSort" class="programnews-filter" aria-label="Sort program posts">
 						<option value="newest">Newest first</option>
 						<option value="oldest">Oldest first</option>
 						<option value="title">Title A–Z</option>
 					</select>
 				</div>
-				<button type="button" id="addProgramNews" class="post-btn post-btn-primary"><i data-lucide="plus"></i> Add Program News</button>
+				<button type="button" id="addProgramNews" class="programnews-btn programnews-btn-primary"><i data-lucide="plus"></i> Add Program News</button>
 			</div>
 
-			<div class="posts-card">
-				<div class="posts-card-head">
+			<div class="programnews-card">
+				<div class="programnews-card-head">
 					<h2>Program Posts</h2>
-					<span id="pnCount" class="posts-count">0 items</span>
+					<span id="pnCount" class="programnews-count">0 items</span>
 				</div>
-				<div class="posts-table-wrap">
-					<table class="posts-table">
+				<div class="programnews-table-wrap">
+					<table class="programnews-table">
 						<thead>
 							<tr>
-								<th class="col-image">Featured Image</th>
-								<th class="col-title">Title / Excerpt</th>
-								<th class="col-category">Program</th>
+								<th>Featured Image</th>
+								<th>Title / Excerpt</th>
+								<th>Program</th>
 								<th>Publish Date</th>
-								<th class="col-status">Status</th>
-								<th class="col-actions">Actions</th>
+								<th>Status</th>
+								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody id="pnTableBody"></tbody>
 					</table>
 				</div>
-				<div id="pnEmpty" class="empty-row" style="text-align:center; padding: 42px;" hidden>
-					<i data-lucide="newspaper" style="width: 48px; height: 48px; margin-bottom: 12px; color: #7a847f;"></i>
-					<h3 style="margin-bottom: 8px; color: #0d2a21;">No program posts found</h3>
-					<p style="color: #6d7873;">Try a different search term or filter.</p>
+				<div id="pnEmpty" class="programnews-empty" hidden>
+					<i data-lucide="newspaper"></i>
+					<h3>No program posts found</h3>
+					<p>Try a different search term or filter.</p>
 				</div>
 			</div>
 
-			<div class="posts-list-controls">
-				<button type="button" id="pnShowMore" class="posts-show-more" hidden>Show more</button>
-				<div id="pnEndMessage" class="posts-end-message" hidden>-- No more items --</div>
-			</div>
+			<nav class="programnews-pagination" id="programnewsPagination" aria-label="Program news pagination" hidden>
+				<button class="programnews-page-btn" id="programnewsPrevPage" type="button" aria-label="Previous page">
+					<i data-lucide="chevron-left"></i>
+				</button>
+				<div class="programnews-page-numbers" id="programnewsPageNumbers"></div>
+				<button class="programnews-page-btn" id="programnewsNextPage" type="button" aria-label="Next page">
+					<i data-lucide="chevron-right"></i>
+				</button>
+				<span class="programnews-page-total" id="programnewsPageTotal">1 page</span>
+			</nav>
 
-			<div id="pnFormModal" class="post-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-form></div>
-				<div class="post-modal-panel" role="dialog" aria-modal="true" aria-labelledby="pnFormHeading">
-					<div class="post-modal-head">
+			<div id="pnFormModal" class="programnews-modal" aria-hidden="true">
+				<div class="programnews-modal-backdrop" data-close-form></div>
+				<div class="programnews-modal-panel" role="dialog" aria-modal="true" aria-labelledby="pnFormHeading">
+					<div class="programnews-modal-head">
 						<div>
-							<h2 id="pnFormHeading">Add Program {Posts}</h2>
-							<p id="postFormDescription">Create or update posts for a specific academic program.</p>
+							<h2 id="pnFormHeading">Add Program Posts</h2>
+							<p>Create or update posts for a specific academic program.</p>
 						</div>
-						<button type="button" class="modal-close" data-close-form aria-label="Close form"><i data-lucide="x"></i></button>
+						<button type="button" class="programnews-modal-close" data-close-form aria-label="Close form"><i data-lucide="x"></i></button>
 					</div>
-					<form id="pnForm" class="post-form" enctype="multipart/form-data">
-						<div class="image-upload-area">
-							<div id="pnImagePlaceholder" class="upload-placeholder"><i data-lucide="image"></i><strong>Featured Image</strong></div>
-							<img id="pnImagePreview" class="image-preview" alt="Featured image preview">
+					<form id="pnForm" class="programnews-form" enctype="multipart/form-data">
+						<div class="programnews-upload-area">
+							<div id="pnImagePlaceholder" class="programnews-upload-placeholder"><i data-lucide="image"></i><strong>Featured Image</strong></div>
+							<img id="pnImagePreview" class="programnews-image-preview" alt="Featured image preview">
 							<input id="pnImageFile" type="file" accept="image/*" hidden>
-							<button type="button" id="pnChooseImage" class="post-btn post-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
-							<button type="button" id="pnRemoveImage" class="post-btn post-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
+							<button type="button" id="pnChooseImage" class="programnews-btn programnews-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
+							<button type="button" id="pnRemoveImage" class="programnews-btn programnews-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
 						</div>
 
-						<div class="form-grid">
-							<label class="form-field full-width">
+						<div class="programnews-form-grid">
+							<label class="programnews-form-field full-width">
 								<span>Title</span>
-								<input id="pnTitle" required maxlength="160" placeholder="Enter program posts title">
+								<input id="pnTitle" type="text" required maxlength="160" placeholder="Enter program posts title">
 							</label>
-							<label class="form-field full-width">
+							<label class="programnews-form-field full-width">
 								<span>Excerpt</span>
-								<textarea id="pnExcerpt" required rows="4" maxlength="400" placeholder="Write a short summary of this posts"></textarea>
+								<textarea id="pnExcerpt" required rows="4" maxlength="400" placeholder="Write a short summary of this post"></textarea>
 							</label>
-							<label class="form-field">
+							<label class="programnews-form-field">
 								<span>Program</span>
-								<select id="pnProgram" required class="posts-filter">
+								<select id="pnProgram" required>
 									<option value="">Select a program</option>
 									<option value="BSIT">BSIT</option>
 									<option value="BSCS">BSCS</option>
@@ -129,55 +134,55 @@
 									<option value="BSHM">BSHM</option>
 								</select>
 							</label>
-							<label class="form-field">
+							<label class="programnews-form-field">
 								<span>Status</span>
-								<select id="pnStatus" class="posts-filter">
+								<select id="pnStatus">
 									<option value="Draft">Draft</option>
 									<option value="Published">Published</option>
 								</select>
 							</label>
-							<label class="form-field">
+							<label class="programnews-form-field">
 								<span>Publish Date</span>
 								<input id="pnDate" type="date" required>
 							</label>
 						</div>
 
-						<div class="form-actions">
-							<button type="button" class="post-btn post-btn-ghost form-cancel" data-close-form>Cancel</button>
-							<div class="form-actions-right">
-								<button type="button" id="pnPreviewFromForm" class="post-btn post-btn-ghost"><i data-lucide="eye"></i> Preview</button>
-								<button type="submit" class="post-btn post-btn-primary"><i data-lucide="save"></i> Save Program Prosts</button>
+						<div class="programnews-form-actions">
+							<button type="button" class="programnews-btn programnews-btn-ghost" data-close-form>Cancel</button>
+							<div class="programnews-form-actions-right">
+								<button type="button" id="pnPreviewFromForm" class="programnews-btn programnews-btn-ghost"><i data-lucide="eye"></i> Preview</button>
+								<button type="submit" class="programnews-btn programnews-btn-primary"><i data-lucide="save"></i> Save Program Posts</button>
 							</div>
 						</div>
 					</form>
 				</div>
 			</div>
 
-			<div id="pnPreviewModal" class="post-modal preview-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-preview></div>
-				<article class="post-modal-panel pn-preview-panel" role="dialog" aria-modal="true" aria-labelledby="pnPreviewHeading">
-					<div class="post-modal-head">
+			<div id="pnPreviewModal" class="programnews-modal" aria-hidden="true">
+				<div class="programnews-modal-backdrop" data-close-preview></div>
+				<article class="programnews-modal-panel programnews-preview-panel" role="dialog" aria-modal="true" aria-labelledby="pnPreviewHeading">
+					<div class="programnews-modal-head">
 						<div><h2 id="pnPreviewHeading">Program Posts Preview</h2></div>
-						<button type="button" class="modal-close" data-close-preview aria-label="Close preview"><i data-lucide="x"></i></button>
+						<button type="button" class="programnews-modal-close" data-close-preview aria-label="Close preview"><i data-lucide="x"></i></button>
 					</div>
-					<div class="pn-preview-scroll">
-						<div id="previewPnImageWrap" class="pn-preview-image">
-							<div id="pnPreviewNoImage" class="pn-noimg"><i data-lucide="image"></i><span>No featured image</span></div>
-							<img id="pnPreviewImage" alt="News featured image" hidden>
+					<div class="programnews-preview-scroll">
+						<div id="previewPnImageWrap" class="programnews-preview-image">
+							<div id="pnPreviewNoImage" class="programnews-preview-noimg"><i data-lucide="image"></i><span>No featured image</span></div>
+							<img id="pnPreviewImage" alt="Featured image" hidden>
 						</div>
-						<div class="pn-preview-body">
-							<p class="pn-preview-eyebrow" id="pnPreviewProgram">Program</p>
-							<h3 class="pn-preview-name" id="pnPreviewTitle">Untitled program posts</h3>
-							<span id="pnPreviewStatus" class="status-badge status-published">Draft</span>
-							<p class="pn-preview-date" id="pnPreviewDate">—</p>
+						<div class="programnews-preview-body">
+							<p class="programnews-preview-eyebrow" id="pnPreviewProgram">Program</p>
+							<h3 class="programnews-preview-name" id="pnPreviewTitle">Untitled program posts</h3>
+							<span id="pnPreviewStatus" class="programnews-status programnews-status-draft">Draft</span>
+							<p class="programnews-preview-date" id="pnPreviewDate">—</p>
 
-							<div class="pn-preview-section">
-								<p class="pn-preview-label">Excerpt</p>
-								<p id="pnPreviewExcerpt" class="pn-preview-text"></p>
+							<div class="programnews-preview-section">
+								<p class="programnews-preview-label">Excerpt</p>
+								<p id="pnPreviewExcerpt" class="programnews-preview-text"></p>
 							</div>
 						</div>
 					</div>
-					<footer class="pn-preview-meta">
+					<footer class="programnews-preview-meta">
 						<div><span>Created by</span><strong id="pnCreatedBy">Admin</strong></div>
 						<div><span>Date created</span><strong id="pnDateCreated">—</strong></div>
 						<div><span>Last updated</span><strong id="pnUpdatedBy">Admin</strong></div>
@@ -185,7 +190,7 @@
 				</article>
 			</div>
 
-			<div class="ui-toast" id="pnToast" role="status" aria-live="polite"></div>
+			<div class="programnews-toast" id="pnToast" role="status" aria-live="polite"></div>
 		</section>
 	</main>
 </div>

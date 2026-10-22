@@ -1,14 +1,16 @@
 (function () {
-    const {fillMeta, offsetDate, $, esc, thumb, statusClass, effectiveStatus, mapsUrl, isUrl, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
+    const {fillMeta, $, esc, mapsUrl, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
     const day = 86400000;
     const items = [];
-    const mk = (id, name, address, status, exp, ago) => items.push({id, name, email: "campus" + id + "@ucc.edu.ph", address, contact: "(02) 5310 " + (1230 + id), url: "", image: "", status, expiryDate: exp === null ? null : offsetDate(exp), createdBy: "Admin", updatedBy: id % 2 ? "Admin" : "", createdAt: Date.now() - ago * day});
-    mk(1, "University of Caloocan City – South Campus", "Biglang Awa Street, Cor 11th Ave Caloocan City", "Active", null, 12);
-    mk(2, "University of Caloocan City – North Campus", "Congressional Road Extension, Camarin, Caloocan City", "Active", 90, 11);
-    mk(3, "UCC Extension Campus (Sample)", "Sample Street, Caloocan City", "Hidden", null, 10);
-    mk(4, "UCC Annex (Expired Sample)", "Sample Annex Road, Caloocan City", "Active", -5, 9);
-    for (let i = 5; i <= 12; i++) mk(i, "UCC Sample Campus " + i, "Sample Address " + i + ", Caloocan City", i % 3 === 0 ? "Hidden" : "Active", i % 4 === 0 ? 30 : null, 13 - i);
+    const mk = (id, name, address, status, ago) => items.push({id, name, email: "campus" + id + "@ucc.edu.ph", address, contact: "(02) 5310 " + (1230 + id), url: "", image: "", status, createdBy: "Admin", updatedBy: id % 2 ? "Admin" : "", createdAt: Date.now() - ago * day});
+    mk(1, "University of Caloocan City – South Campus", "Biglang Awa Street, Cor 11th Ave Caloocan City", "Active", 12);
+    mk(2, "University of Caloocan City – North Campus", "Congressional Road Extension, Camarin, Caloocan City", "Active", 11);
+    mk(3, "UCC Extension Campus (Sample)", "Sample Street, Caloocan City", "Hidden", 10);
+    mk(4, "UCC Annex (Sample)", "Sample Annex Road, Caloocan City", "Active", 9);
+    for (let i = 5; i <= 12; i++) mk(i, "UCC Sample Campus " + i, "Sample Address " + i + ", Caloocan City", i % 3 === 0 ? "Hidden" : "Active", 13 - i);
     let nextId = 200, editingId = null;
+
+    const statusClass = s => ({Active: "campus-status-active", Hidden: "campus-status-hidden"}[s] || "campus-status-hidden");
 
     const formModal = $("mainModal"), previewModal = $("previewModal"), form = $("form");
     const img = imageField({fileInput: $("image"), chooseBtn: $("uploadImageBtn"), removeBtn: $("removeImageBtn"), preview: $("imagePreview"), placeholder: $("uploadImagePlaceholder")});
@@ -17,11 +19,16 @@
     const table = list({
         items: () => items,
         tbody: $("tableBody"), search: $("search"), filter: $("filter"), sort: $("sort"),
-        more: $("showMoreBtn"), end: $("lastItemMessage"), count: $("itemCount"),
+        count: $("itemCount"),
+        pageSize: 10,
+        pager: {
+            nav: $("campusesPagination"), prev: $("campusesPrevPage"), next: $("campusesNextPage"),
+            numbers: $("campusesPageNumbers"), total: $("campusesPageTotal")
+        },
         cols: 5, emptyText: "No campuses found.",
         countLabel: n => n + (n === 1 ? " campus" : " campuses"),
         match: (it, q) => (it.name + " " + it.address + " " + it.email).toLowerCase().includes(q),
-        filterFn: (it, f) => f === "all" || effectiveStatus(it).toLowerCase() === f,
+        filterFn: (it, f) => f === "all" || it.status.toLowerCase() === f,
         sorters: {
             "created-desc": (a, b) => b.createdAt - a.createdAt,
             "created-asc": (a, b) => a.createdAt - b.createdAt,
@@ -30,14 +37,14 @@
         },
         row: it => `
             <tr data-id="${it.id}">
-                <td>${thumb(it.image, "image")}</td>
-                <td class="post-title-cell"><span class="cell-ellipsis" title="${esc(it.name)}">${esc(it.name)}</span></td>
-                <td><a class="campus-map-link category-text" href="${esc(mapHref(it))}" target="_blank" rel="noopener noreferrer"><i data-lucide="map-pin"></i> <span class="cell-ellipsis">${esc(it.address)}</span></a></td>
-                <td><span class="status-badge ${statusClass(effectiveStatus(it))}">${esc(effectiveStatus(it))}</span></td>
-                <td><div class="action-buttons">
-                    <button type="button" class="action-btn" data-action="preview" title="Preview campus" aria-label="Preview campus"><i data-lucide="eye"></i></button>
-                    <button type="button" class="action-btn edit" data-action="edit" title="Edit campus" aria-label="Edit campus"><i data-lucide="pencil"></i></button>
-                    <button type="button" class="action-btn delete" data-action="delete" title="Delete campus" aria-label="Delete campus"><i data-lucide="trash-2"></i></button>
+                <td><div class="campus-thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
+                <td><span class="campus-cell-ellipsis campus-name" title="${esc(it.name)}">${esc(it.name)}</span></td>
+                <td><a class="campus-map-link" href="${esc(mapHref(it))}" target="_blank" rel="noopener noreferrer"><i data-lucide="map-pin"></i><span class="campus-cell-ellipsis">${esc(it.address)}</span></a></td>
+                <td><span class="campus-status ${statusClass(it.status)}">${esc(it.status)}</span></td>
+                <td><div class="campus-actions">
+                    <button type="button" class="campus-action-btn" data-action="preview" title="Preview campus" aria-label="Preview campus"><i data-lucide="eye"></i></button>
+                    <button type="button" class="campus-action-btn campus-action-edit" data-action="edit" title="Edit campus" aria-label="Edit campus"><i data-lucide="pencil"></i></button>
+                    <button type="button" class="campus-action-btn campus-action-delete" data-action="delete" title="Delete campus" aria-label="Delete campus"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`,
         onAction: async (action, id) => {
@@ -59,7 +66,6 @@
         $("email").value = it ? it.email : "";
         $("address").value = it ? it.address : "";
         $("status").value = it ? it.status : "Active";
-        $("expiryDate").value = it && it.expiryDate ? it.expiryDate : "";
         $("url").value = it ? it.url : "";
         $("contact").value = it ? it.contact : "";
         img.set(it ? it.image : "");
@@ -84,7 +90,7 @@
 
     const readForm = () => ({
         name: $("name").value.trim(), email: $("email").value.trim(), address: $("address").value.trim(),
-        status: $("status").value, expiryDate: $("expiryDate").value || null, url: $("url").value.trim(),
+        status: $("status").value, url: $("url").value.trim(),
         contact: $("contact").value.trim(), image: img.get()
     });
 

@@ -16,7 +16,7 @@
 		{id:3, title:"Accountancy Review Program Opens", excerpt:"A free review program for incoming board examinees will start next month.", program:"BSA", image:"", publishDate:dayStr(5), status:"Draft", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 3 * day},
 		{id:4, title:"BSED Practicum Orientation", excerpt:"Orientation for students about to begin their practicum in partner schools.", program:"BSED", image:"", publishDate:dayStr(-20), status:"Archived", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 20 * day}
 	];
-	let nextId = 5, editingId = null, imageData = "", visibleCount = 10;
+	let nextId = 5, editingId = null, imageData = "", page = 1;
 	const pageSize = 10;
 
 	const tbody = $("pnTableBody"), search = $("pnSearch"), programFilter = $("programFilter"), statusFilter = $("pnStatusFilter"), sortSel = $("pnSort");
@@ -27,7 +27,47 @@
 	const fmtDay = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US", {year:"numeric", month:"short", day:"numeric"}) : "—";
 	const icons = () => { if (window.lucide) lucide.createIcons(); };
 
-	const statusClass = s => ({Published:"status-published", Draft:"status-draft-pn", Archived:"status-archived-pn"}[s] || "status-draft-pn");
+	const pager = {
+		nav: $("programnewsPagination"), prev: $("programnewsPrevPage"), next: $("programnewsNextPage"),
+		numbers: $("programnewsPageNumbers"), total: $("programnewsPageTotal")
+	};
+
+	function pageList(cur, last) {
+		if (last <= 7) return Array.from({length: last}, (_, i) => i + 1);
+		const out = [1], s = Math.max(2, cur - 1), e = Math.min(last - 1, cur + 1);
+		if (s > 2) out.push("...");
+		for (let i = s; i <= e; i++) out.push(i);
+		if (e < last - 1) out.push("...");
+		out.push(last);
+		return out;
+	}
+
+	function renderPager(totalRows) {
+		const last = Math.max(1, Math.ceil(totalRows / pageSize));
+		pager.nav.hidden = totalRows === 0;
+		pager.numbers.innerHTML = "";
+		pageList(page, last).forEach(p => {
+			if (p === "...") {
+				const s = document.createElement("span");
+				s.className = "programnews-page-ellipsis"; s.textContent = "…";
+				pager.numbers.appendChild(s);
+				return;
+			}
+			const b = document.createElement("button");
+			b.type = "button";
+			b.className = "programnews-page-btn" + (p === page ? " active" : "");
+			b.textContent = p;
+			b.setAttribute("aria-label", "Page " + p);
+			if (p === page) b.setAttribute("aria-current", "page");
+			b.addEventListener("click", () => { page = p; render(); });
+			pager.numbers.appendChild(b);
+		});
+		pager.prev.disabled = page <= 1;
+		pager.next.disabled = page >= last;
+		pager.total.textContent = last + (last === 1 ? " page" : " pages");
+	}
+
+	const statusClass = s => ({Published:"programnews-status-published", Draft:"programnews-status-draft", Archived:"programnews-status-archived"}[s] || "programnews-status-draft");
 
 	function toast(message) {
 		const t = $("pnToast"); t.textContent = message; t.classList.add("show");
@@ -46,29 +86,33 @@
 			if (mode === "title") return a.title.localeCompare(b.title);
 			return b.createdAt - a.createdAt;
 		});
-		const visible = list.slice(0, visibleCount);
+		const last = Math.max(1, Math.ceil(list.length / pageSize));
+		if (page > last) page = last;
+		const visible = list.slice((page - 1) * pageSize, page * pageSize);
 
-		tbody.innerHTML = visible.map(n => `
+		tbody.innerHTML = visible.map(n => {
+			const archived = n.status === "Archived";
+			return `
 			<tr data-id="${n.id}">
-				<td><div class="featured-thumb">${n.image ? `<img src="${n.image}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
-				<td class="post-title-cell"><span class="pn-title" title="${esc(n.title)}">${esc(n.title)}</span><span class="pn-excerpt" title="${esc(n.excerpt)}">${esc(n.excerpt)}</span></td>
-				<td><span class="cell-ellipsis" title="${esc(PROGRAMS[n.program] || n.program)}">${esc(n.program)}</span></td>
-				<td><span class="cell-ellipsis">${esc(fmtDay(n.publishDate))}</span></td>
-				<td><span class="status-badge ${statusClass(n.status)}">${esc(n.status)}</span></td>
-				<td><div class="action-buttons">
-					<button class="action-btn" data-action="preview" type="button" title="Preview" aria-label="Preview ${esc(n.title)}"><i data-lucide="eye"></i></button>
-					<button class="action-btn edit" data-action="edit" type="button" title="Edit" aria-label="Edit ${esc(n.title)}"><i data-lucide="pencil"></i></button>
-					<button class="action-btn archive" data-action="archive" type="button" title="${n.status === "Archived" ? "Restore" : "Archive"}" aria-label="${n.status === "Archived" ? "Restore" : "Archive"} ${esc(n.title)}"><i data-lucide="${n.status === "Archived" ? "archive-restore" : "archive"}"></i></button>
+				<td><div class="programnews-thumb">${n.image ? `<img src="${n.image}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
+				<td class="programnews-title-cell"><span class="programnews-title-text" title="${esc(n.title)}">${esc(n.title)}</span><span class="programnews-excerpt" title="${esc(n.excerpt)}">${esc(n.excerpt)}</span></td>
+				<td><span class="programnews-cell-ellipsis" title="${esc(PROGRAMS[n.program] || n.program)}">${esc(n.program)}</span></td>
+				<td><span class="programnews-cell-ellipsis">${esc(fmtDay(n.publishDate))}</span></td>
+				<td><span class="programnews-status ${statusClass(n.status)}">${esc(n.status)}</span></td>
+				<td><div class="programnews-actions">
+					<button class="programnews-action-btn" data-action="preview" type="button" title="Preview" aria-label="Preview ${esc(n.title)}"><i data-lucide="eye"></i></button>
+					<button class="programnews-action-btn programnews-action-edit" data-action="edit" type="button" title="Edit" aria-label="Edit ${esc(n.title)}"><i data-lucide="pencil"></i></button>
+					<button class="programnews-action-btn programnews-action-archive" data-action="archive" type="button" title="${archived ? "Restore" : "Archive"}" aria-label="${archived ? "Restore" : "Archive"} ${esc(n.title)}"><i data-lucide="${archived ? "archive-restore" : "archive"}"></i></button>
 				</div></td>
-			</tr>`).join("");
+			</tr>`;
+		}).join("");
 
 		$("pnCount").textContent = list.length + (list.length === 1 ? " item" : " items");
 		$("pnEmpty").hidden = list.length !== 0;
-		$("pnShowMore").hidden = list.length <= visibleCount;
-		$("pnEndMessage").hidden = !(list.length > pageSize && list.length <= visibleCount);
+		renderPager(list.length);
 		icons();
 	}
-	function resetAndRender() { visibleCount = pageSize; render(); }
+	function resetAndRender() { page = 1; render(); }
 
 	function setImage(src) {
 		imageData = src || "";
@@ -89,7 +133,7 @@
 
 	function openForm(n) {
 		editingId = n ? n.id : null;
-		$("pnFormHeading").textContent = n ? "Edit Program News" : "Add Program News";
+		$("pnFormHeading").textContent = n ? "Edit Program Posts" : "Add Program Posts";
 		$("pnTitle").value = n ? n.title : "";
 		$("pnExcerpt").value = n ? n.excerpt : "";
 		$("pnProgram").value = n ? n.program : "";
@@ -106,9 +150,9 @@
 
 	function openPreview(n) {
 		$("pnPreviewProgram").textContent = PROGRAMS[n.program] || n.program || "Program";
-		$("pnPreviewTitle").textContent = n.title || "Untitled program news";
+		$("pnPreviewTitle").textContent = n.title || "Untitled program posts";
 		const shown = n.status, badge = $("pnPreviewStatus");
-		badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
+		badge.textContent = shown; badge.className = "programnews-status " + statusClass(shown);
 		$("pnPreviewDate").textContent = n.publishDate ? "Publish date: " + fmtDay(n.publishDate) : "—";
 		$("pnPreviewExcerpt").textContent = n.excerpt || "";
 
@@ -127,20 +171,21 @@
 		const restoring = n.status === "Archived";
 		let confirmed;
 		if (window.Swal) {
-			const res = await Swal.fire({title: restoring ? "Restore this news?" : "Archive this news?", text:n.title, icon:"question", showCancelButton:true, confirmButtonText: restoring ? "Yes, restore" : "Yes, archive", confirmButtonColor:"#0d5c3a"});
+			const res = await Swal.fire({title: restoring ? "Restore this post?" : "Archive this post?", text:n.title, icon:"question", showCancelButton:true, confirmButtonText: restoring ? "Yes, restore" : "Yes, archive", confirmButtonColor:"#0d5c3a"});
 			confirmed = res.isConfirmed;
 		} else {
 			confirmed = confirm((restoring ? "Restore" : "Archive") + " \"" + n.title + "\"?");
 		}
 		if (!confirmed) return;
 		n.status = restoring ? "Draft" : "Archived"; n.updatedBy = "Admin";
-		render(); toast(restoring ? "Program news restored as draft." : "Program news archived.");
+		render(); toast(restoring ? "Program post restored as draft." : "Program post archived.");
 	}
 
 	$("addProgramNews").addEventListener("click", () => openForm(null));
 	search.addEventListener("input", resetAndRender);
 	[programFilter, statusFilter, sortSel].forEach(el => el.addEventListener("change", resetAndRender));
-	$("pnShowMore").addEventListener("click", () => { visibleCount += pageSize; render(); });
+	pager.prev.addEventListener("click", () => { if (page > 1) { page--; render(); } });
+	pager.next.addEventListener("click", () => { page++; render(); });
 
 	tbody.addEventListener("click", e => {
 		const btn = e.target.closest("[data-action]"); if (!btn) return;
@@ -162,7 +207,8 @@
 		const existing = editingId !== null ? items.find(x => x.id === editingId) : null;
 		openPreview({
 			title: $("pnTitle").value.trim(), excerpt: $("pnExcerpt").value.trim(), program: $("pnProgram").value,
-			status: $("pnStatus").value, publishDate: $("pnDate").value, image: imageData,
+			status: existing && existing.status === "Archived" ? "Archived" : $("pnStatus").value,
+			publishDate: $("pnDate").value, image: imageData,
 			createdBy: existing ? existing.createdBy : "Admin", createdAt: existing ? existing.createdAt : Date.now(),
 			updatedBy: existing ? existing.updatedBy : "Admin"
 		});
@@ -181,12 +227,12 @@
 				if (n.status === "Archived") data.status = "Archived";
 				Object.assign(n, data, {updatedBy: "Admin"});
 			}
-			toast("Program news updated.");
+			toast("Program post updated.");
 		} else {
 			items.push({id: nextId++, createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now(), ...data});
-			toast("Program news added.");
+			toast("Program post added.");
 		}
-		resetAndRender(); closeForm();
+		page = 1; render(); closeForm();
 	});
 
 	document.addEventListener("keydown", e => {

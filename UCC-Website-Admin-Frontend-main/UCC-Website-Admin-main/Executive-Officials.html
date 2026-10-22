@@ -10,115 +10,118 @@
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="assets/css/posts.css">
-	
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/executive.css">
 </head>
 <body data-page-title="Executive Officials">
 <div class="dashboard-layout">
 	<div id="sidebar-container"></div>
 	<main class="main-content">
 		<div id="header-container"></div>
-		<section class="posts-page">
-			<div class="posts-intro">
+		<section class="executive-page">
+			<div class="executive-intro">
 				<div>
 					<p>Manage executive official profiles displayed on the public website.</p>
 				</div>
 			</div>
 
-			<div class="posts-toolbar">
-				<div class="posts-tools-left">
-					<div class="posts-search">
+			<div class="executive-toolbar">
+				<div class="executive-tools-left">
+					<div class="executive-search">
 						<input type="search" id="officialSearch" placeholder="Search officials..." aria-label="Search officials">
 						<i data-lucide="search"></i>
 					</div>
 
-					<select id="officialStatusFilter" class="posts-filter" aria-label="Filter by status">
+					<select id="officialStatusFilter" class="executive-filter" aria-label="Filter by status">
 						<option value="all">All Statuses</option>
 						<option value="active">Active</option>
 						<option value="inactive">Hidden</option>
 					</select>
 
-					<select id="officialOrderFilter" class="posts-filter" aria-label="Sort officials">
+					<select id="officialOrderFilter" class="executive-filter" aria-label="Sort officials">
 						<option value="ascending">Order: Low to High</option>
 						<option value="descending">Order: High to Low</option>
 						<option value="name">Name: A to Z</option>
 					</select>
 				</div>
-				<button type="button" id="addOfficialBtn" class="post-btn post-btn-primary"><i data-lucide="plus"></i> Add Official</button>
+				<button type="button" id="addOfficialBtn" class="executive-btn executive-btn-primary"><i data-lucide="plus"></i> Add Official</button>
 			</div>
 
-			<div class="posts-card">
-				<div class="posts-card-head">
+			<div class="executive-card">
+				<div class="executive-card-head">
 					<h2>Executive Officials</h2>
-					<span id="tableOfficialCount" class="posts-count">0 officials</span>
+					<span id="tableOfficialCount" class="executive-count">0 officials</span>
 				</div>
-
-				<div class="posts-table-wrap">
-					<table class="posts-table">
+				<div class="executive-table-wrap">
+					<table class="executive-table">
 						<thead>
 							<tr>
-								<th class="col-image">Photo</th>
-								<th class="col-title">Name</th>
-								<th class="col-category">Position</th>
+								<th>Photo</th>
+								<th>Name</th>
+								<th>Position</th>
 								<th>Order</th>
-								<th class="col-status">Status</th>
-								<th class="col-actions">Actions</th>
+								<th>Status</th>
+								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody id="officialsTableBody"></tbody>
 					</table>
 				</div>
-
-				<div id="emptyState" class="empty-row" style="text-align:center; padding: 42px;" hidden>
-					<i data-lucide="user-round-search" style="width: 48px; height: 48px; margin-bottom: 12px; color: #7a847f;"></i>
-					<h3 style="margin-bottom: 8px; color: #0d2a21;">No officials found</h3>
-					<p style="color: #6d7873;">Try a different search term or status filter.</p>
+				<div id="emptyState" class="executive-empty" hidden>
+					<i data-lucide="user-round-search"></i>
+					<h3>No officials found</h3>
+					<p>Try a different search term or status filter.</p>
 				</div>
 			</div>
 
-			<div class="posts-list-controls">
-				<div id="officialsPagination" class="posts-pagination"></div>
-				<p id="officialsEndMessage" class="posts-end-message" hidden>-- No more items --</p>
-			</div>
+			<nav class="executive-pagination" id="officialsPagination" aria-label="Executive officials pagination" hidden>
+				<button class="executive-page-btn" id="officialsPrevPage" type="button" aria-label="Previous page">
+					<i data-lucide="chevron-left"></i>
+				</button>
+				<div class="executive-page-numbers" id="officialsPageNumbers"></div>
+				<button class="executive-page-btn" id="officialsNextPage" type="button" aria-label="Next page">
+					<i data-lucide="chevron-right"></i>
+				</button>
+				<span class="executive-page-total" id="officialsPageTotal">1 page</span>
+			</nav>
 
-			<div id="officialModal" class="post-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-modal></div>
-				<div class="post-modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-					<div class="post-modal-head">
+			<div id="officialModal" class="executive-modal" aria-hidden="true">
+				<div class="executive-modal-backdrop" data-close-modal></div>
+				<div class="executive-modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+					<div class="executive-modal-head">
 						<div>
 							<h2 id="modalTitle">Add Official</h2>
-							<p id="postFormDescription">Add or update an official’s photo, name, position, biography, display order, and publication status.</p>
+							<p>Add or update an official’s photo, name, position, biography, display order, and publication status.</p>
 						</div>
-						<button type="button" class="modal-close" id="closeModalBtn" data-close-modal aria-label="Close modal"><i data-lucide="x"></i></button>
+						<button type="button" class="executive-modal-close" data-close-modal aria-label="Close form"><i data-lucide="x"></i></button>
 					</div>
-					<form id="officialForm" class="post-form" enctype="multipart/form-data">
-						<div class="image-upload-area">
-							<div id="officialUploadInitials" class="upload-placeholder"><i data-lucide="user"></i><strong>Official Photo</strong></div>
-							<img id="officialUploadImage" class="image-preview" alt="Official photo preview">
+					<form id="officialForm" class="executive-form" enctype="multipart/form-data">
+						<div class="executive-upload-area">
+							<div id="officialUploadInitials" class="executive-upload-placeholder"><i data-lucide="user"></i><strong>Official Photo</strong></div>
+							<img id="officialUploadImage" class="executive-image-preview" alt="Official photo preview">
 							<input id="officialPhoto" type="file" accept="image/*" hidden>
-							<button type="button" id="chooseOfficialPhotoBtn" class="post-btn post-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
-							<button type="button" id="removeOfficialPhoto" class="post-btn post-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
+							<button type="button" id="chooseOfficialPhotoBtn" class="executive-btn executive-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
+							<button type="button" id="removeOfficialPhoto" class="executive-btn executive-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
 						</div>
 
-						<div class="form-grid">
-							<label class="form-field">
+						<div class="executive-form-grid">
+							<label class="executive-form-field">
 								<span>Full Name</span>
 								<input id="name" name="name" type="text" placeholder="Enter full name" required>
 							</label>
-							<label class="form-field">
+							<label class="executive-form-field">
 								<span>Position</span>
 								<input id="position" name="position" type="text" placeholder="Enter official position" required>
 							</label>
-							<label class="form-field full-width">
+							<label class="executive-form-field full-width">
 								<span>Biography / Short Description</span>
 								<textarea id="bio" name="bio" rows="4" placeholder="Enter biography or additional role information"></textarea>
 							</label>
-							<label class="form-field">
+							<label class="executive-form-field">
 								<span>Display Order</span>
 								<input id="displayOrder" name="displayOrder" type="number" min="1" value="1" required>
 							</label>
-							<label class="form-field">
+							<label class="executive-form-field">
 								<span>Status</span>
 								<select id="status" name="status">
 									<option value="Active">Active</option>
@@ -127,43 +130,45 @@
 							</label>
 						</div>
 
-						<div class="form-actions">
-							<button type="button" id="cancelBtn" class="post-btn post-btn-ghost form-cancel" data-close-modal>Cancel</button>
-							<div class="form-actions-right">
-								<button type="button" id="previewOfficialFormBtn" class="post-btn post-btn-ghost"><i data-lucide="eye"></i> Preview</button>
-								<button type="submit" id="saveOfficialBtn" class="post-btn post-btn-primary"><i data-lucide="save"></i> Save Official</button>
+						<div class="executive-form-actions">
+							<button type="button" id="cancelBtn" class="executive-btn executive-btn-ghost">Cancel</button>
+							<div class="executive-form-actions-right">
+								<button type="button" id="previewOfficialFormBtn" class="executive-btn executive-btn-ghost"><i data-lucide="eye"></i> Preview</button>
+								<button type="submit" id="saveOfficialBtn" class="executive-btn executive-btn-primary"><i data-lucide="save"></i> Save Official</button>
 							</div>
 						</div>
 					</form>
 				</div>
 			</div>
 
-			<div id="officialPreviewModal" class="post-modal preview-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-preview></div>
-				<article class="post-modal-panel person-preview-panel" role="dialog" aria-modal="true" aria-labelledby="officialPreviewTitle">
-					<div class="post-modal-head">
-						<div><h2 id="officialPreviewTitle">Executive Official Preview</h2></div>
-						<button type="button" class="modal-close" id="closeOfficialPreview" data-close-preview aria-label="Close preview"><i data-lucide="x"></i></button>
+			<div id="officialPreviewModal" class="executive-modal" aria-hidden="true">
+				<div class="executive-modal-backdrop" data-close-preview></div>
+				<article class="executive-modal-panel executive-preview-panel" role="dialog" aria-modal="true" aria-labelledby="officialPreviewHeading">
+					<div class="executive-modal-head">
+						<div><h2 id="officialPreviewHeading">Executive Official Details</h2></div>
+						<button type="button" class="executive-modal-close" data-close-preview aria-label="Close preview"><i data-lucide="x"></i></button>
 					</div>
-					<div class="person-preview-body">
-						<div class="person-preview-top">
-							<div class="person-preview-photo">
-								<span id="officialPreviewInitials">OF</span>
-								<img id="officialPreviewImage" alt="Official photo" hidden>
+					<div class="executive-preview-scroll">
+						<div class="executive-preview-body">
+							<div class="executive-preview-top">
+								<div class="executive-preview-photo">
+									<span id="officialPreviewInitials">OF</span>
+									<img id="officialPreviewImage" alt="Official photo" hidden>
+								</div>
+								<div>
+									<h3 class="executive-preview-name" id="officialPreviewName">Official Name</h3>
+									<p class="executive-preview-position" id="officialPreviewPosition"></p>
+									<span id="officialPreviewStatus" class="executive-status executive-status-active">Active</span>
+								</div>
 							</div>
-							<div>
-								<h3 class="person-preview-name" id="officialPreviewName">Official Name</h3>
-								<p class="person-preview-position" id="officialPreviewPosition"></p>
-								<span id="officialPreviewStatus" class="status-badge status-published">Active</span>
+							<div class="executive-preview-section">
+								<p class="executive-preview-label">Biography / Short Description</p>
+								<p id="officialPreviewBio" class="executive-preview-text"></p>
 							</div>
-						</div>
-						<div class="person-preview-section">
-							<p class="person-preview-label">Biography / Short Description</p>
-							<p id="officialPreviewBio" class="person-preview-text"></p>
-							<p id="officialPreviewOrder" class="person-preview-order"></p>
+							<p id="officialPreviewOrder" class="executive-preview-order"></p>
 						</div>
 					</div>
-					<footer class="person-preview-meta">
+					<footer class="executive-preview-meta">
 						<div><span>Created by</span><strong id="previewMetadataCreatedBy">—</strong></div>
 						<div><span>Date created</span><strong id="previewMetadataDateCreated">—</strong></div>
 						<div><span>Last updated by</span><strong id="previewMetadataLastUpdatedBy">—</strong></div>
@@ -171,40 +176,7 @@
 				</article>
 			</div>
 
-			<div id="viewModal" class="post-modal preview-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-view></div>
-				<article class="post-modal-panel person-preview-panel" role="dialog" aria-modal="true" aria-labelledby="viewModalTitle">
-					<div class="post-modal-head">
-						<div><h2 id="viewModalTitle">Executive Official Details</h2></div>
-						<button type="button" class="modal-close" id="closeViewBtn" data-close-view aria-label="Close details"><i data-lucide="x"></i></button>
-					</div>
-					<div class="person-preview-body">
-						<div class="person-preview-top">
-							<div class="person-preview-photo">
-								<span id="viewInitials">OF</span>
-								<img id="viewImage" alt="Official photo" hidden>
-							</div>
-							<div>
-								<h3 class="person-preview-name" id="viewName"></h3>
-								<p class="person-preview-position" id="viewPosition"></p>
-								<span id="viewStatus" class="status-badge status-published"></span>
-							</div>
-						</div>
-						<div class="person-preview-section">
-							<p class="person-preview-label">Biography / Short Description</p>
-							<p id="viewBio" class="person-preview-text"></p>
-							<p id="viewOrder" class="person-preview-order"></p>
-						</div>
-					</div>
-					<footer class="person-preview-meta">
-						<div><span>Created by</span><strong id="viewMetadataCreatedBy">—</strong></div>
-						<div><span>Date created</span><strong id="viewMetadataDateCreated">—</strong></div>
-						<div><span>Last updated by</span><strong id="viewMetadataLastUpdatedBy">—</strong></div>
-					</footer>
-				</article>
-			</div>
-
-			<div class="ui-toast" id="officialToast" role="status" aria-live="polite"></div>
+			<div class="executive-toast" id="officialToast" role="status" aria-live="polite"></div>
 		</section>
 	</main>
 </div>

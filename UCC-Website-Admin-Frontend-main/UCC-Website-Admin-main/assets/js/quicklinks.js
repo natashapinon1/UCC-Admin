@@ -1,5 +1,5 @@
 (function () {
-    const {fillMeta, $, esc, statusClass, fmtDate, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
+    const {fillMeta, $, esc, fmtDate, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
     const day = 86400000;
 
     const items = [];
@@ -11,13 +11,20 @@
     mk(5, 5, "Academic Calendar", "https://example.com/calendar", "Active", 8);
     let nextId = 200, editingId = null;
 
+    const statusClass = s => s === "Active" ? "quicklink-status-active" : "quicklink-status-hidden";
+
     const formModal = $("quickModal"), previewModal = $("quickPreviewModal"), form = $("quickLinkForm");
     const img = imageField({fileInput: $("featuredImage"), chooseBtn: $("chooseImageBtn"), removeBtn: $("removeImageBtn"), preview: $("selectedImagePreview"), placeholder: $("uploadPlaceholder")});
 
     const table = list({
         items: () => items,
         tbody: $("quickLinksBody"), search: $("quickSearch"),
-        more: $("showMoreBtn"), less: $("showLessBtn"), end: $("quickEndMessage"), count: $("totalLinks"),
+        count: $("totalLinks"),
+        pageSize: 10,
+        pager: {
+            nav: $("quicklinksPagination"), prev: $("quicklinksPrevPage"), next: $("quicklinksNextPage"),
+            numbers: $("quicklinksPageNumbers"), total: $("quicklinksPageTotal")
+        },
         cols: 5, emptyText: "No quick links match your search.",
         countLabel: n => n + (n === 1 ? " link" : " links"),
         match: (it, q) => (it.name + " " + it.url).toLowerCase().includes(q),
@@ -25,13 +32,13 @@
         row: it => `
             <tr data-id="${it.id}">
                 <td>${it.order}</td>
-                <td class="post-title-cell"><span class="cell-ellipsis" title="${esc(it.name)}">${esc(it.name)}</span></td>
-                <td><span class="cell-ellipsis" title="${esc(it.url)}">${esc(it.url)}</span></td>
-                <td><span class="status-badge ${statusClass(it.status)}">${esc(it.status)}</span></td>
-                <td><div class="action-buttons">
-                    <button type="button" class="action-btn" data-action="preview" title="Preview link" aria-label="Preview link"><i data-lucide="eye"></i></button>
-                    <button type="button" class="action-btn edit" data-action="edit" title="Edit link" aria-label="Edit link"><i data-lucide="pencil"></i></button>
-                    <button type="button" class="action-btn delete" data-action="delete" title="Delete link" aria-label="Delete link"><i data-lucide="trash-2"></i></button>
+                <td class="quicklink-title-cell"><span class="quicklink-cell-ellipsis" title="${esc(it.name)}">${esc(it.name)}</span></td>
+                <td><span class="quicklink-cell-ellipsis" title="${esc(it.url)}">${esc(it.url)}</span></td>
+                <td><span class="quicklink-status ${statusClass(it.status)}">${esc(it.status)}</span></td>
+                <td><div class="quicklink-actions">
+                    <button type="button" class="quicklink-action-btn" data-action="preview" title="Preview link" aria-label="Preview link"><i data-lucide="eye"></i></button>
+                    <button type="button" class="quicklink-action-btn quicklink-action-edit" data-action="edit" title="Edit link" aria-label="Edit link"><i data-lucide="pencil"></i></button>
+                    <button type="button" class="quicklink-action-btn quicklink-action-delete" data-action="delete" title="Delete link" aria-label="Delete link"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`,
         onAction: async (action, id) => {
@@ -66,7 +73,7 @@
         $("previewName").textContent = it.name || "Link name";
         $("previewUrl").textContent = it.url || "";
         const shown = it.status, badge = $("previewStatus");
-        badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
+        badge.textContent = shown; badge.className = "quicklink-status " + statusClass(shown);
         const link = $("previewVisitLink");
         link.href = it.url || "#";
         const pi = $("previewImage");

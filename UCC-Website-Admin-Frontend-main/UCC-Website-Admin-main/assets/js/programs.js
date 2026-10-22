@@ -9,7 +9,7 @@
         {id:4, name:"Bachelor of Arts in Communication", college:"College of Arts and Sciences", mission:"To train communicators who think critically and express ideas responsibly.", vision:"A program that shapes socially engaged and creative communicators.", status:"Hidden", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 3 * day},
         {id:5, name:"Bachelor of Science in Civil Engineering", college:"College of Engineering", mission:"To produce engineers who build safe and sustainable infrastructure.", vision:"A recognized engineering program driven by innovation and integrity.", status:"Active", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 2 * day}
     ];
-    let nextId = 6, editingId = null, showingAll = false;
+    let nextId = 6, editingId = null, page = 1;
     const pageSize = 10;
 
     const tbody = $("programsTableBody"), search = $("programSearch"), collegeFilter = $("collegeFilter"), statusFilter = $("programStatusFilter"), sortSel = $("programSort");
@@ -19,7 +19,47 @@
     const fmtDate = ts => ts ? new Date(ts).toLocaleDateString("en-US", {year:"numeric", month:"short", day:"numeric"}) : "—";
     const icons = () => { if (window.lucide) lucide.createIcons(); };
 
-    const statusClass = s => s === "Active" ? "status-published" : "status-hidden-program";
+    const pager = {
+        nav: $("programsPagination"), prev: $("programsPrevPage"), next: $("programsNextPage"),
+        numbers: $("programsPageNumbers"), total: $("programsPageTotal")
+    };
+
+    function pageList(cur, last) {
+        if (last <= 7) return Array.from({length: last}, (_, i) => i + 1);
+        const out = [1], s = Math.max(2, cur - 1), e = Math.min(last - 1, cur + 1);
+        if (s > 2) out.push("...");
+        for (let i = s; i <= e; i++) out.push(i);
+        if (e < last - 1) out.push("...");
+        out.push(last);
+        return out;
+    }
+
+    function renderPager(totalRows) {
+        const last = Math.max(1, Math.ceil(totalRows / pageSize));
+        pager.nav.hidden = totalRows === 0;
+        pager.numbers.innerHTML = "";
+        pageList(page, last).forEach(p => {
+            if (p === "...") {
+                const s = document.createElement("span");
+                b.className = "program-page-btn" + (p === page ? " active" : "");
+                pager.numbers.appendChild(s);
+                return;
+            }
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "page-btn" + (p === page ? " active" : "");
+            b.textContent = p;
+            b.setAttribute("aria-label", "Page " + p);
+            if (p === page) b.setAttribute("aria-current", "page");
+            b.addEventListener("click", () => { page = p; render(); });
+            pager.numbers.appendChild(b);
+        });
+        pager.prev.disabled = page <= 1;
+        pager.next.disabled = page >= last;
+        pager.total.textContent = last + (last === 1 ? " page" : " pages");
+    }
+
+    const statusClass = s => s === "Active" ? "program-status-active" : "program-status-hidden";
 
     function toast(message) {
         const t = $("programsToast"); t.textContent = message; t.classList.add("show");
@@ -37,29 +77,29 @@
             if (mode === "name-desc") return b.name.localeCompare(a.name);
             if (mode === "newest") return b.createdAt - a.createdAt;
             if (mode === "oldest") return a.createdAt - b.createdAt;
-            
+
             return a.name.localeCompare(b.name);
         });
-        const visible = showingAll ? list : list.slice(0, pageSize);
+        const last = Math.max(1, Math.ceil(list.length / pageSize));
+        if (page > last) page = last;
+        const visible = list.slice((page - 1) * pageSize, page * pageSize);
 
-        tbody.innerHTML = visible.map(p => `
+                tbody.innerHTML = visible.map(p => `
             <tr data-id="${p.id}">
-                <td class="post-title-cell"><span class="cell-ellipsis programs-program-name" title="${esc(p.name)}">${esc(p.name)}</span></td>
-                <td><span class="cell-ellipsis" title="${esc(p.college)}">${esc(p.college)}</span></td>
-                <td><span class="programs-mission-excerpt" title="${esc(p.mission)}">${esc(p.mission)}</span></td>
-                <td><span class="status-badge ${statusClass(p.status)}">${esc(p.status)}</span></td>
-                <td><div class="action-buttons">
-                    <button class="action-btn" data-action="preview" type="button" title="Preview program" aria-label="Preview ${esc(p.name)}"><i data-lucide="eye"></i></button>
-                    <button class="action-btn edit" data-action="edit" type="button" title="Edit program" aria-label="Edit ${esc(p.name)}"><i data-lucide="pencil"></i></button>
-                    <button class="action-btn archive" data-action="delete" type="button" title="Delete program" aria-label="Delete ${esc(p.name)}"><i data-lucide="trash-2"></i></button>
+                <td><span class="program-cell-ellipsis program-name" title="${esc(p.name)}">${esc(p.name)}</span></td>
+                <td><span class="program-cell-ellipsis" title="${esc(p.college)}">${esc(p.college)}</span></td>
+                <td><span class="program-mission-excerpt" title="${esc(p.mission)}">${esc(p.mission)}</span></td>
+                <td><span class="program-status ${statusClass(p.status)}">${esc(p.status)}</span></td>
+                <td><div class="program-actions">
+                    <button class="program-action-btn" data-action="preview" type="button" title="Preview program" aria-label="Preview ${esc(p.name)}"><i data-lucide="eye"></i></button>
+                    <button class="program-action-btn program-action-edit" data-action="edit" type="button" title="Edit program" aria-label="Edit ${esc(p.name)}"><i data-lucide="pencil"></i></button>
+                    <button class="program-action-btn program-action-delete" data-action="delete" type="button" title="Delete program" aria-label="Delete ${esc(p.name)}"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`).join("");
 
         $("programCount").textContent = list.length + (list.length === 1 ? " program" : " programs");
         $("programsEmpty").hidden = list.length !== 0;
-        $("programsShowMore").hidden = list.length <= pageSize;
-        $("programsShowMore").textContent = showingAll ? "Show less" : "Show more";
-        $("programsEndMessage").hidden = !(list.length > pageSize && showingAll);
+        renderPager(list.length);
         icons();
     }
 
@@ -83,7 +123,7 @@
         $("previewProgramCollege").textContent = p.college || "College Name";
         $("previewProgramName").textContent = p.name || "Program Name";
         const shown = p.status, badge = $("previewProgramStatus");
-        badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
+        badge.textContent = shown; badge.className = "program-status " + statusClass(shown);
         $("previewProgramMission").textContent = p.mission || "";
         $("previewProgramVision").textContent = p.vision || "";
         $("programCreatedBy").textContent = p.createdBy || "Admin";
@@ -107,9 +147,10 @@
     }
 
     $("addProgramBtn").addEventListener("click", () => openForm(null));
-    search.addEventListener("input", () => { showingAll = false; render(); });
-    [collegeFilter, statusFilter, sortSel].forEach(el => el.addEventListener("change", () => { showingAll = false; render(); }));
-    $("programsShowMore").addEventListener("click", () => { showingAll = !showingAll; render(); });
+    search.addEventListener("input", () => { page = 1; render(); });
+    [collegeFilter, statusFilter, sortSel].forEach(el => el.addEventListener("change", () => { page = 1; render(); }));
+    pager.prev.addEventListener("click", () => { if (page > 1) { page--; render(); } });
+    pager.next.addEventListener("click", () => { page++; render(); });
 
     tbody.addEventListener("click", e => {
         const btn = e.target.closest("[data-action]"); if (!btn) return;
@@ -151,7 +192,7 @@
             programs.push({id: nextId++, createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now(), ...data});
             toast("Program added.");
         }
-        showingAll = false; render(); closeForm();
+        page = 1; render(); closeForm();
     });
 
     document.addEventListener("keydown", e => {

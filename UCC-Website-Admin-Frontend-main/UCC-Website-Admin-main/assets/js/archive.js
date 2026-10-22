@@ -1,19 +1,24 @@
 (function () {
-    const {fillMeta, offsetDate, $, esc, thumb, fmtDay, toast, openModal, closeModal, confirmDelete, list, icons, initMenu} = UCC;
+    const {fillMeta, $, esc, fmtDay, toast, openModal, closeModal, confirmDelete, list, icons, initMenu} = UCC;
     const day = 86400000;
     const items = [];
-    const mk = (id, title, category, publish, archived, excerpt, content, exp, ago) => items.push({id, title, category, publish, archived, image: "", excerpt, content, expiryDate: exp === null ? null : offsetDate(exp), createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now() - ago * day});
-    mk(101, "UCC Opens Applications for the New Academic Year", "Admission", "2026-06-12", "2026-10-10", "Application details, requirements, and important dates for incoming students.", "The University of Caloocan City announces the opening of applications for the upcoming academic year. Applicants are encouraged to review the admission requirements and submit complete documents within the published application period.", null, 12);
-    mk(102, "University Community Celebrates Founding Anniversary", "News", "2026-05-28", "2026-10-09", "Highlights from the university’s founding anniversary celebration.", "The university community came together to celebrate its founding anniversary, recognizing the people and milestones that have shaped UCC. The celebration highlighted the university’s continuing commitment to accessible education and public service.", null, 11);
+    const mk = (id, title, category, publish, archived, excerpt, content, ago) => items.push({id, title, category, publish, archived, image: "", excerpt, content, createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now() - ago * day});
+    mk(101, "UCC Opens Applications for the New Academic Year", "Admission", "2026-06-12", "2026-10-10", "Application details, requirements, and important dates for incoming students.", "The University of Caloocan City announces the opening of applications for the upcoming academic year. Applicants are encouraged to review the admission requirements and submit complete documents within the published application period.", 12);
+    mk(102, "University Community Celebrates Founding Anniversary", "News", "2026-05-28", "2026-10-09", "Highlights from the university’s founding anniversary celebration.", "The university community came together to celebrate its founding anniversary, recognizing the people and milestones that have shaped UCC. The celebration highlighted the university’s continuing commitment to accessible education and public service.", 11);
     const cats = ["Announcement", "Event", "Student Life", "Community Extension Services", "Alumni", "Careers", "College News", "Program News", "News", "Event"];
-    cats.forEach((c, i) => mk(103 + i, "Archived " + c + " Sample " + (i + 1), c, "2026-0" + (1 + (i % 6)) + "-1" + (i % 9), "2026-10-0" + (1 + (i % 8)), "Sample excerpt for archived " + c + " post " + (i + 1) + ".", "Sample content for archived " + c + " post " + (i + 1) + ". Use this row to test preview, restore, and permanent delete.", i === 3 ? 30 : null, 10 - i));
+    cats.forEach((c, i) => mk(103 + i, "Archived " + c + " Sample " + (i + 1), c, "2026-0" + (1 + (i % 6)) + "-1" + (i % 9), "2026-10-0" + (1 + (i % 8)), "Sample excerpt for archived " + c + " post " + (i + 1) + ".", "Sample content for archived " + c + " post " + (i + 1) + ". Use this row to test preview, restore, and permanent delete.", 10 - i));
 
     const previewModal = $("archivePreviewModal");
 
     const table = list({
         items: () => items,
         tbody: $("archiveTableBody"), search: $("archiveSearch"), filter: $("categoryFilter"), sort: $("orderFilter"),
-        more: $("showMoreBtn"), less: $("showLessBtn"), end: $("archiveEndMessage"), count: $("archiveCount"),
+        count: $("archiveCount"),
+        pageSize: 10,
+        pager: {
+            nav: $("archivePagination"), prev: $("archivePrevPage"), next: $("archiveNextPage"),
+            numbers: $("archivePageNumbers"), total: $("archivePageTotal")
+        },
         cols: 6, emptyText: "No archived content found.",
         countLabel: n => n + (n === 1 ? " archived item" : " archived items"),
         match: (it, q) => (it.title + " " + it.excerpt + " " + it.category).toLowerCase().includes(q),
@@ -26,15 +31,15 @@
         },
         row: it => `
             <tr data-id="${it.id}">
-                <td>${thumb(it.image, "image")}</td>
-                <td class="post-title-cell"><span class="cell-ellipsis" title="${esc(it.title)}">${esc(it.title)}</span><span class="cell-ellipsis" style="display:block;font-size:.85em;opacity:.7">${esc(it.excerpt)}</span></td>
-                <td><span class="category-text">${esc(it.category)}</span></td>
+                <td><div class="archive-thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
+                <td class="archive-title-cell"><span class="archive-cell-ellipsis" title="${esc(it.title)}">${esc(it.title)}</span><span class="archive-cell-ellipsis archive-excerpt-line">${esc(it.excerpt)}</span></td>
+                <td><span class="archive-category">${esc(it.category)}</span></td>
                 <td>${esc(fmtDay(it.publish))}</td>
                 <td>${esc(fmtDay(it.archived))}</td>
-                <td><div class="action-buttons">
-                    <button type="button" class="action-btn" data-action="preview" title="Preview post" aria-label="Preview post"><i data-lucide="eye"></i></button>
-                    <button type="button" class="action-btn edit" data-action="restore" title="Unarchive post" aria-label="Unarchive post"><i data-lucide="archive-restore"></i></button>
-                    <button type="button" class="action-btn delete" data-action="delete" title="Delete permanently" aria-label="Delete permanently"><i data-lucide="trash-2"></i></button>
+                <td><div class="archive-actions">
+                    <button type="button" class="archive-action-btn" data-action="preview" title="Preview post" aria-label="Preview post"><i data-lucide="eye"></i></button>
+                    <button type="button" class="archive-action-btn archive-action-restore" data-action="restore" title="Unarchive post" aria-label="Unarchive post"><i data-lucide="archive-restore"></i></button>
+                    <button type="button" class="archive-action-btn archive-action-delete" data-action="delete" title="Delete permanently" aria-label="Delete permanently"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`,
         onAction: async (action, id) => {

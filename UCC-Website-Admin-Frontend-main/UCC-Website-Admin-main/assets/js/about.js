@@ -1,15 +1,17 @@
 (function () {
-    const {fillMeta, offsetDate, $, esc, thumb, statusClass, effectiveStatus, fmtDate, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
+    const {fillMeta, $, esc, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
     const day = 86400000;
 
     const items = [];
-    const mk = (id, name, description, status, exp, ago) => items.push({id, name, description, image: "", status, expiryDate: exp === null ? null : offsetDate(exp), createdBy: "Admin", updatedBy: id % 2 ? "Admin" : "", createdAt: Date.now() - ago * day});
-    mk(1, "About University of Caloocan City", "Learn about UCC, its history, mission, and commitment to quality education.", "Active", null, 12);
-    mk(2, "Our History", "Discover the milestones and growth that shaped the university.", "Active", 90, 11);
-    mk(3, "Mission and Vision", "Read the university's mission, vision, and guiding values.", "Hidden", null, 10);
-    mk(4, "Our Community", "Meet the students, faculty, and community that make UCC unique.", "Active", null, 9);
-    mk(5, "Academic Excellence", "An overview of UCC's academic offerings and learning environment.", "Hidden", null, 8);
+    const mk = (id, name, description, status, ago) => items.push({id, name, description, image: "", status, createdBy: "Admin", updatedBy: id % 2 ? "Admin" : "", createdAt: Date.now() - ago * day});
+    mk(1, "About University of Caloocan City", "Learn about UCC, its history, mission, and commitment to quality education.", "Active", 12);
+    mk(2, "Our History", "Discover the milestones and growth that shaped the university.", "Active", 11);
+    mk(3, "Mission and Vision", "Read the university's mission, vision, and guiding values.", "Hidden", 10);
+    mk(4, "Our Community", "Meet the students, faculty, and community that make UCC unique.", "Active", 9);
+    mk(5, "Academic Excellence", "An overview of UCC's academic offerings and learning environment.", "Hidden", 8);
     let nextId = 200, editingId = null;
+
+    const statusClass = s => ({Active: "about-status-active", Hidden: "about-status-hidden"}[s] || "about-status-hidden");
 
     const formModal = $("postFormOverlay"), previewModal = $("postPreviewOverlay"), form = $("postForm");
     const img = imageField({fileInput: $("featuredImage"), chooseBtn: $("chooseImageBtn"), removeBtn: $("removeImageBtn"), preview: $("selectedImagePreview"), placeholder: $("uploadPlaceholder")});
@@ -17,22 +19,27 @@
     const table = list({
         items: () => items,
         tbody: $("postsTableBody"), search: $("aboutSearch"), filter: $("statusFilter"),
-        more: $("showMoreBtn"), end: $("noMoreItems"), count: $("postCount"),
+        count: $("postCount"),
+        pageSize: 10,
+        pager: {
+            nav: $("aboutPagination"), prev: $("aboutPrevPage"), next: $("aboutNextPage"),
+            numbers: $("aboutPageNumbers"), total: $("aboutPageTotal")
+        },
         cols: 5, emptyText: "No posts found.",
         countLabel: n => n + (n === 1 ? " post" : " posts"),
         match: (it, q) => (it.name + " " + it.description).toLowerCase().includes(q),
-        filterFn: (it, f) => f === "all" || effectiveStatus(it) === f,
+        filterFn: (it, f) => f === "all" || it.status === f,
         defaultSort: (a, b) => a.id - b.id,
         row: it => `
             <tr data-id="${it.id}">
-                <td>${thumb(it.image, "image")}</td>
-                <td class="post-title-cell"><span class="cell-ellipsis" title="${esc(it.name)}">${esc(it.name)}</span></td>
-                <td><span class="cell-ellipsis" title="${esc(it.description)}">${esc(it.description)}</span></td>
-                <td><span class="status-badge ${statusClass(effectiveStatus(it))}">${esc(effectiveStatus(it))}</span></td>
-                <td><div class="action-buttons">
-                    <button type="button" class="action-btn" data-action="preview" title="Preview post" aria-label="Preview post"><i data-lucide="eye"></i></button>
-                    <button type="button" class="action-btn edit" data-action="edit" title="Edit post" aria-label="Edit post"><i data-lucide="pencil"></i></button>
-                    <button type="button" class="action-btn delete" data-action="delete" title="Delete post" aria-label="Delete post"><i data-lucide="trash-2"></i></button>
+                <td><div class="about-thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : `<i data-lucide="image" aria-hidden="true"></i>`}</div></td>
+                <td><span class="about-cell-ellipsis about-name" title="${esc(it.name)}">${esc(it.name)}</span></td>
+                <td><span class="about-cell-ellipsis" title="${esc(it.description)}">${esc(it.description)}</span></td>
+                <td><span class="about-status ${statusClass(it.status)}">${esc(it.status)}</span></td>
+                <td><div class="about-actions">
+                    <button type="button" class="about-action-btn" data-action="preview" title="Preview post" aria-label="Preview post"><i data-lucide="eye"></i></button>
+                    <button type="button" class="about-action-btn about-action-edit" data-action="edit" title="Edit post" aria-label="Edit post"><i data-lucide="pencil"></i></button>
+                    <button type="button" class="about-action-btn about-action-delete" data-action="delete" title="Delete post" aria-label="Delete post"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`,
         onAction: async (action, id) => {
@@ -54,7 +61,6 @@
         $("postName").value = it ? it.name : "";
         $("postDescription").value = it ? it.description : "";
         $("postStatus").value = it ? it.status : "Active";
-        $("expiryDate").value = it && it.expiryDate ? it.expiryDate : "";
         img.set(it ? it.image : "");
         openModal(formModal);
         $("postName").focus();
@@ -64,15 +70,16 @@
     function showPreview(it) {
         $("previewName").textContent = it.name || "Post name";
         $("previewDescription").textContent = it.description || "Post description will appear here.";
-        const shown = effectiveStatus(it), badge = $("previewStatus");
-        badge.textContent = shown; badge.className = "status-badge " + statusClass(shown);
-        const pi = $("previewImage");
-        if (it.image) { pi.src = it.image; pi.hidden = false; } else { pi.removeAttribute("src"); pi.hidden = true; }
+        const shown = it.status, badge = $("previewStatus");
+        badge.textContent = shown; badge.className = "about-status " + statusClass(shown);
+        const pi = $("previewImage"), wrap = $("previewImageWrap");
+        if (it.image) { pi.src = it.image; pi.hidden = false; wrap.hidden = false; }
+        else { pi.removeAttribute("src"); pi.hidden = true; wrap.hidden = true; }
         fillMeta(it);
         openModal(previewModal);
     }
 
-    const readForm = () => ({name: $("postName").value.trim(), description: $("postDescription").value.trim(), status: $("postStatus").value, expiryDate: $("expiryDate").value || null, image: img.get()});
+    const readForm = () => ({name: $("postName").value.trim(), description: $("postDescription").value.trim(), status: $("postStatus").value, image: img.get()});
 
     $("addPostBtn").addEventListener("click", () => openForm(null));
     $("formPreviewBtn").addEventListener("click", () => {

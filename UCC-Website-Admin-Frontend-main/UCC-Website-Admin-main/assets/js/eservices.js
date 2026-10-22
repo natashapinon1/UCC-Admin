@@ -1,5 +1,5 @@
 (function () {
-    const {fillMeta, $, esc, thumb, statusClass, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
+    const {fillMeta, $, esc, toast, openModal, closeModal, confirmDelete, imageField, list, icons, initMenu} = UCC;
     const day = 86400000;
 
     const items = [];
@@ -11,13 +11,20 @@
     mk(5, "Online Payment", "Pay tuition and other fees online.", "https://example.com/payment", "Active", 8);
 
     let nextId = 200, editingId = null;
+    const statusClass = s => s === "Active" ? "eservice-status-active" : "eservice-status-inactive";
+
     const formModal = $("mainModal"), previewModal = $("previewModal"), form = $("form");
     const img = imageField({fileInput: $("image"), chooseBtn: $("uploadImageBtn"), removeBtn: $("removeImageBtn"), preview: $("imagePreview"), placeholder: $("uploadImagePlaceholder")});
 
     const table = list({
         items: () => items,
         tbody: $("tableBody"), search: $("search"), filter: $("filter"), sort: $("sort"),
-        more: $("showMoreBtn"), end: $("lastItemMessage"), count: $("itemCount"),
+        count: $("itemCount"),
+        pageSize: 10,
+        pager: {
+            nav: $("eservicesPagination"), prev: $("eservicesPrevPage"), next: $("eservicesNextPage"),
+            numbers: $("eservicesPageNumbers"), total: $("eservicesPageTotal")
+        },
         cols: 5, emptyText: "No e-services found",
         countLabel: n => n + (n === 1 ? " service" : " services"),
         match: (it, q) => (it.name + " " + it.description + " " + it.url).toLowerCase().includes(q),
@@ -30,14 +37,14 @@
         },
         row: it => `
             <tr data-id="${it.id}">
-                <td>${thumb(it.image, "globe")}</td>
-                <td class="post-title-cell"><span class="cell-ellipsis" title="${esc(it.name)}">${esc(it.name)}</span></td>
-                <td><span class="cell-ellipsis" title="${esc(it.url)}">${esc(it.url || "—")}</span></td>
-                <td><span class="status-badge ${statusClass(it.status)}">${esc(it.status)}</span></td>
-                <td><div class="action-buttons">
-                    <button type="button" class="action-btn" data-action="preview" title="Preview service" aria-label="Preview service"><i data-lucide="eye"></i></button>
-                    <button type="button" class="action-btn edit" data-action="edit" title="Edit service" aria-label="Edit service"><i data-lucide="pencil"></i></button>
-                    <button type="button" class="action-btn delete" data-action="delete" title="Delete service" aria-label="Delete service"><i data-lucide="trash-2"></i></button>
+                <td><div class="eservice-thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : `<i data-lucide="globe" aria-hidden="true"></i>`}</div></td>
+                <td><span class="eservice-cell-ellipsis eservice-name" title="${esc(it.name)}">${esc(it.name)}</span></td>
+                <td><span class="eservice-cell-ellipsis eservice-link" title="${esc(it.url)}">${esc(it.url || "—")}</span></td>
+                <td><span class="eservice-status ${statusClass(it.status)}">${esc(it.status)}</span></td>
+                <td><div class="eservice-actions">
+                    <button type="button" class="eservice-action-btn" data-action="preview" title="Preview service" aria-label="Preview service"><i data-lucide="eye"></i></button>
+                    <button type="button" class="eservice-action-btn eservice-action-edit" data-action="edit" title="Edit service" aria-label="Edit service"><i data-lucide="pencil"></i></button>
+                    <button type="button" class="eservice-action-btn eservice-action-delete" data-action="delete" title="Delete service" aria-label="Delete service"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`,
         onAction: async (action, id) => {

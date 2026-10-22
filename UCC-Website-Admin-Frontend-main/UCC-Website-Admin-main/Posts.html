@@ -10,8 +10,8 @@
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="assets/css/posts.css">
+	<link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/post.css">
 
 
 </head>
@@ -187,10 +187,16 @@
                     </div>
                 </div>
 
-                <div class="posts-list-controls">
-                    <button class="posts-show-more" id="showMorePostsBtn" type="button" hidden>Show more</button>
-                    <p class="posts-end-message" id="postsEndMessage" hidden>-- No more items --</p>
-                </div>
+                            <nav class="posts-pagination" id="postsPagination" aria-label="Posts pagination" hidden>
+                <button class="page-btn" id="prevPageBtn" type="button" aria-label="Previous page">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button class="page-btn" id="nextPageBtn" type="button" aria-label="Next page">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+                <span class="page-total" id="pageTotal">1 page</span>
+            </nav>
 
                 <div class="post-modal" id="postModal" aria-hidden="true">
                     <div class="post-modal-backdrop" data-close-modal></div>

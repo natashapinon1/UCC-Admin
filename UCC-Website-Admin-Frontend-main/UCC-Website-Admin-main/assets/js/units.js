@@ -7,7 +7,7 @@
         {id:2, name:"College of Business and Accountancy", dean:"Dr. Roberto Cruz", logo:"", deanImage:"", status:"Active", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 2 * day},
         {id:3, name:"College of Education", dean:"Dr. Elena Reyes", logo:"", deanImage:"", status:"Hidden", createdBy:"Admin", updatedBy:"Admin", createdAt:Date.now() - 1 * day}
     ];
-    let nextId = 4, editingId = null, logoData = "", deanData = "", showingAll = false;
+    let nextId = 4, editingId = null, logoData = "", deanData = "", page = 1;
     const pageSize = 10;
 
     const tbody = $("unitsTableBody"), search = $("unitSearch"), statusFilter = $("unitStatusFilter"), sortSel = $("unitSort");
@@ -20,7 +20,47 @@
     const fmtDate = ts => ts ? new Date(ts).toLocaleDateString("en-US", {year:"numeric", month:"short", day:"numeric"}) : "—";
     const icons = () => { if (window.lucide) lucide.createIcons(); };
 
-    const statusClass = s => s === "Active" ? "status-published" : "status-hidden-unit";
+    const pager = {
+        nav: $("unitsPagination"), prev: $("unitsPrevPage"), next: $("unitsNextPage"),
+        numbers: $("unitsPageNumbers"), total: $("unitsPageTotal")
+    };
+
+    function pageList(cur, last) {
+        if (last <= 7) return Array.from({length: last}, (_, i) => i + 1);
+        const out = [1], s = Math.max(2, cur - 1), e = Math.min(last - 1, cur + 1);
+        if (s > 2) out.push("...");
+        for (let i = s; i <= e; i++) out.push(i);
+        if (e < last - 1) out.push("...");
+        out.push(last);
+        return out;
+    }
+
+    function renderPager(totalRows) {
+        const last = Math.max(1, Math.ceil(totalRows / pageSize));
+        pager.nav.hidden = totalRows === 0;
+        pager.numbers.innerHTML = "";
+        pageList(page, last).forEach(p => {
+            if (p === "...") {
+                const s = document.createElement("span");
+                b.className = "unit-page-btn" + (p === page ? " active" : "");
+                pager.numbers.appendChild(s);
+                return;
+            }
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "unit-page-btn" + (p === page ? " active" : "");
+            b.textContent = p;
+            b.setAttribute("aria-label", "Page " + p);
+            if (p === page) b.setAttribute("aria-current", "page");
+            b.addEventListener("click", () => { page = p; render(); });
+            pager.numbers.appendChild(b);
+        });
+        pager.prev.disabled = page <= 1;
+        pager.next.disabled = page >= last;
+        pager.total.textContent = last + (last === 1 ? " page" : " pages");
+    }
+
+    const statusClass = s => s === "Active" ? "unit-status-active" : "unit-status-hidden";
 
     function toast(message) {
         const t = $("unitsToast"); t.textContent = message; t.classList.add("show");
@@ -36,26 +76,26 @@
             if (mode === "oldest") return a.createdAt - b.createdAt;
             return a.name.localeCompare(b.name);
         });
-        const visible = showingAll ? list : list.slice(0, pageSize);
+        const last = Math.max(1, Math.ceil(list.length / pageSize));
+        if (page > last) page = last;
+        const visible = list.slice((page - 1) * pageSize, page * pageSize);
 
-        tbody.innerHTML = visible.map(u => `
+               tbody.innerHTML = visible.map(u => `
             <tr data-id="${u.id}">
                 <td><div class="unit-logo">${u.logo ? `<img src="${u.logo}" alt="">` : esc(logoInitials(u.name))}</div></td>
-                <td class="post-title-cell"><span class="cell-ellipsis unit-name" title="${esc(u.name)}">${esc(u.name)}</span></td>
-                <td><div class="unit-dean"><span class="unit-dean-avatar">${u.deanImage ? `<img src="${u.deanImage}" alt="">` : esc(deanInitials(u.dean))}</span><span class="cell-ellipsis">${esc(u.dean)}</span></div></td>
-                <td><span class="status-badge ${statusClass(u.status)}">${esc(u.status)}</span></td>
-                <td><div class="action-buttons">
-                    <button class="action-btn" data-action="preview" type="button" title="Preview unit" aria-label="Preview ${esc(u.name)}"><i data-lucide="eye"></i></button>
-                    <button class="action-btn edit" data-action="edit" type="button" title="Edit unit" aria-label="Edit ${esc(u.name)}"><i data-lucide="pencil"></i></button>
-                    <button class="action-btn archive" data-action="delete" type="button" title="Delete unit" aria-label="Delete ${esc(u.name)}"><i data-lucide="trash-2"></i></button>
+                <td class="unit-title-cell"><span class="unit-name" title="${esc(u.name)}">${esc(u.name)}</span></td>
+                <td><div class="unit-dean"><span class="unit-dean-avatar">${u.deanImage ? `<img src="${u.deanImage}" alt="">` : esc(deanInitials(u.dean))}</span><span>${esc(u.dean)}</span></div></td>
+                <td><span class="unit-status ${statusClass(u.status)}">${esc(u.status)}</span></td>
+                <td><div class="unit-actions">
+                    <button class="unit-action-btn" data-action="preview" type="button" title="Preview unit" aria-label="Preview ${esc(u.name)}"><i data-lucide="eye"></i></button>
+                    <button class="unit-action-btn unit-action-edit" data-action="edit" type="button" title="Edit unit" aria-label="Edit ${esc(u.name)}"><i data-lucide="pencil"></i></button>
+                    <button class="unit-action-btn unit-action-delete" data-action="delete" type="button" title="Delete unit" aria-label="Delete ${esc(u.name)}"><i data-lucide="trash-2"></i></button>
                 </div></td>
             </tr>`).join("");
 
         $("unitCount").textContent = list.length + (list.length === 1 ? " unit" : " units");
         $("unitsEmpty").hidden = list.length !== 0;
-        $("unitsShowMore").hidden = list.length <= pageSize;
-        $("unitsShowMore").textContent = showingAll ? "Show less" : "Show more";
-        $("unitsEndMessage").hidden = !(list.length > pageSize && showingAll);
+        renderPager(list.length);
         icons();
     }
 
@@ -97,7 +137,7 @@
     function openPreview(u) {
         $("previewUnitName").textContent = u.name || "Unit Name";
         const badge = $("previewUnitStatus");
-        badge.textContent = u.status; badge.className = "status-badge " + statusClass(u.status);
+       badge.textContent = u.status; badge.className = "unit-status " + statusClass(u.status);
         $("previewDeanName").textContent = u.dean || "Dean's Name";
 
         const logoImg = $("previewUnitLogo"), logoDefault = $("previewUnitLogoInitials");
@@ -132,10 +172,11 @@
     }
 
     $("addUnitBtn").addEventListener("click", () => openForm(null));
-    search.addEventListener("input", () => { showingAll = false; render(); });
-    statusFilter.addEventListener("change", () => { showingAll = false; render(); });
-    sortSel.addEventListener("change", () => { showingAll = false; render(); });
-    $("unitsShowMore").addEventListener("click", () => { showingAll = !showingAll; render(); });
+    search.addEventListener("input", () => { page = 1; render(); });
+    statusFilter.addEventListener("change", () => { page = 1; render(); });
+    sortSel.addEventListener("change", () => { page = 1; render(); });
+    pager.prev.addEventListener("click", () => { if (page > 1) { page--; render(); } });
+    pager.next.addEventListener("click", () => { page++; render(); });
 
     tbody.addEventListener("click", e => {
         const btn = e.target.closest("[data-action]"); if (!btn) return;
@@ -177,7 +218,7 @@
             units.push({id: nextId++, createdBy: "Admin", updatedBy: "Admin", createdAt: Date.now(), ...data});
             toast("Unit added.");
         }
-        showingAll = false; render(); closeForm();
+        page = 1; render(); closeForm();
     });
     document.addEventListener("keydown", e => {
         if (e.key !== "Escape") return;

@@ -10,30 +10,29 @@
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="assets/css/posts.css">
-
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/unitnews.css">
 </head>
 <body data-page-title="Unit News">
 <div class="dashboard-layout">
 	<div id="sidebar-container"></div>
 	<main class="main-content">
 		<div id="header-container"></div>
-		<section class="posts-page">
-			<div class="posts-intro">
+		<section class="unitnews-page">
+			<div class="unitnews-intro">
 				<div>
 					<p>Manage news and announcements published by university units.</p>
 				</div>
 			</div>
 
-			<div class="posts-toolbar">
-				<div class="posts-tools-left">
-					<div class="posts-search">
-						<input type="search" id="newsSearch" placeholder="Search unit posts..." aria-label="Search unit posts	">
+			<div class="unitnews-toolbar">
+				<div class="unitnews-tools-left">
+					<div class="unitnews-search">
+						<input type="search" id="newsSearch" placeholder="Search unit posts..." aria-label="Search unit posts">
 						<i data-lucide="search"></i>
 					</div>
 
-					<select id="newsUnitFilter" class="posts-filter" aria-label="Filter by unit">
+					<select id="newsUnitFilter" class="unitnews-filter" aria-label="Filter by unit">
 						<option value="All">All units</option>
 						<option>College of Arts and Sciences</option>
 						<option>College of Business and Accountancy</option>
@@ -41,76 +40,82 @@
 						<option>Office of Student Affairs</option>
 					</select>
 
-					<select id="newsStatusFilter" class="posts-filter" aria-label="Filter by status">
+					<select id="newsStatusFilter" class="unitnews-filter" aria-label="Filter by status">
 						<option value="All">All statuses</option>
 						<option>Draft</option>
 						<option>Published</option>
 					</select>
 
-					<select id="newsSort" class="posts-filter" aria-label="Sort unit posts">
+					<select id="newsSort" class="unitnews-filter" aria-label="Sort unit posts">
 						<option value="newest">Newest first</option>
 						<option value="oldest">Oldest first</option>
 						<option value="title-asc">Title: A to Z</option>
 						<option value="title-desc">Title: Z to A</option>
 					</select>
 				</div>
-				<button type="button" id="addNewsBtn" class="post-btn post-btn-primary"><i data-lucide="plus"></i> Add Unit Posts</button>
+				<button type="button" id="addNewsBtn" class="unitnews-btn unitnews-btn-primary"><i data-lucide="plus"></i> Add Unit Posts</button>
 			</div>
 
-			<div class="posts-card">
-				<div class="posts-card-head">
+			<div class="unitnews-card">
+				<div class="unitnews-card-head">
 					<h2>Unit News</h2>
-					<span id="newsCount" class="posts-count">0 items</span>
+					<span id="newsCount" class="unitnews-count">0 items</span>
 				</div>
-				<div class="posts-table-wrap">
-					<table class="posts-table">
+				<div class="unitnews-table-wrap">
+					<table class="unitnews-table">
 						<thead>
 							<tr>
-								<th class="col-image">Featured Image</th>
-								<th class="col-title">Title</th>
-								<th class="col-category">Unit</th>
+								<th>Featured Image</th>
+								<th>Title</th>
+								<th>Unit</th>
 								<th>Excerpt</th>
 								<th>Publish Date</th>
-								<th class="col-status">Status</th>
-								<th class="col-actions">Actions</th>
+								<th>Status</th>
+								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody id="newsTableBody"></tbody>
 					</table>
 				</div>
-				<div id="newsEmpty" class="empty-row" style="text-align:center; padding: 42px;" hidden>
-					<i data-lucide="newspaper" style="width: 48px; height: 48px; margin-bottom: 12px; color: #7a847f;"></i>
-					<h3 style="margin-bottom: 8px; color: #0d2a21;">No unit posts found</h3>
-					<p style="color: #6d7873;">Try a different search term or filter.</p>
+				<div id="newsEmpty" class="unitnews-empty" hidden>
+					<i data-lucide="newspaper"></i>
+					<h3>No unit posts found</h3>
+					<p>Try a different search term or filter.</p>
 				</div>
 			</div>
 
-			<div class="posts-list-controls">
-				<button type="button" id="newsShowMore" class="posts-show-more" hidden>Show more</button>
-				<p id="newsEndMessage" class="posts-end-message" hidden>-- No more items --</p>
-			</div>
+			<nav class="unitnews-pagination" id="newsPagination" aria-label="Unit news pagination" hidden>
+				<button class="unitnews-page-btn" id="newsPrevPage" type="button" aria-label="Previous page">
+					<i data-lucide="chevron-left"></i>
+				</button>
+				<div class="unitnews-page-numbers" id="newsPageNumbers"></div>
+				<button class="unitnews-page-btn" id="newsNextPage" type="button" aria-label="Next page">
+					<i data-lucide="chevron-right"></i>
+				</button>
+				<span class="unitnews-page-total" id="newsPageTotal">1 page</span>
+			</nav>
 
-			<div id="newsFormModal" class="post-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-news-form></div>
-				<div class="post-modal-panel" role="dialog" aria-modal="true" aria-labelledby="newsFormTitle">
-					<div class="post-modal-head">
+			<div id="newsFormModal" class="unitnews-modal" aria-hidden="true">
+				<div class="unitnews-modal-backdrop" data-close-news-form></div>
+				<div class="unitnews-modal-panel" role="dialog" aria-modal="true" aria-labelledby="newsFormTitle">
+					<div class="unitnews-modal-head">
 						<div>
 							<h2 id="newsFormTitle">Add Unit Posts</h2>
-							<p id="postFormDescription">Add or update the featured image, title, excerpt, publication date, and status.</p>
+							<p>Add or update the featured image, title, excerpt, publication date, and status.</p>
 						</div>
-						<button type="button" class="modal-close" data-close-news-form aria-label="Close form"><i data-lucide="x"></i></button>
+						<button type="button" class="unitnews-modal-close" data-close-news-form aria-label="Close form"><i data-lucide="x"></i></button>
 					</div>
-					<form id="newsForm" class="post-form" enctype="multipart/form-data">
-						<div class="image-upload-area">
-							<div id="newsImagePlaceholder" class="upload-placeholder"><i data-lucide="image"></i><strong>Featured Image</strong></div>
-							<img id="newsImagePreview" class="image-preview" alt="Featured image preview">
+					<form id="newsForm" class="unitnews-form" enctype="multipart/form-data">
+						<div class="unitnews-upload-area">
+							<div id="newsImagePlaceholder" class="unitnews-upload-placeholder"><i data-lucide="image"></i><strong>Featured Image</strong></div>
+							<img id="newsImagePreview" class="unitnews-image-preview" alt="Featured image preview">
 							<input id="newsImageFile" type="file" accept="image/*" hidden>
-							<button type="button" id="chooseNewsImageBtn" class="post-btn post-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
-							<button type="button" id="removeNewsImage" class="post-btn post-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
+							<button type="button" id="chooseNewsImageBtn" class="unitnews-btn unitnews-btn-ghost"><i data-lucide="upload"></i> Choose Photo</button>
+							<button type="button" id="removeNewsImage" class="unitnews-btn unitnews-btn-danger" hidden><i data-lucide="x"></i> Remove Photo</button>
 						</div>
 
-						<div class="form-grid">
-							<label class="form-field full-width">
+						<div class="unitnews-form-grid">
+							<label class="unitnews-form-field full-width">
 								<span>Unit</span>
 								<select id="newsUnit" name="unit" required>
 									<option value="">Select a unit</option>
@@ -120,19 +125,19 @@
 									<option>Office of Student Affairs</option>
 								</select>
 							</label>
-							<label class="form-field full-width">
+							<label class="unitnews-form-field full-width">
 								<span>Title</span>
 								<input id="newsTitle" name="title" type="text" maxlength="180" placeholder="Enter unit posts title" required>
 							</label>
-							<label class="form-field full-width">
+							<label class="unitnews-form-field full-width">
 								<span>Excerpt</span>
 								<textarea id="newsExcerpt" name="excerpt" rows="4" maxlength="500" placeholder="Write a short summary of the unit posts" required></textarea>
 							</label>
-							<label class="form-field">
+							<label class="unitnews-form-field">
 								<span>Publish Date</span>
 								<input id="newsPublishDate" name="publishDate" type="date" required>
 							</label>
-							<label class="form-field full-width">
+							<label class="unitnews-form-field full-width">
 								<span>Status</span>
 								<select id="newsStatus" name="status">
 									<option>Draft</option>
@@ -141,42 +146,42 @@
 							</label>
 						</div>
 
-						<div class="form-actions">
-							<button type="button" id="cancelNewsBtn" class="post-btn post-btn-ghost form-cancel">Cancel</button>
-							<div class="form-actions-right">
-								<button type="button" id="previewNewsBtn" class="post-btn post-btn-ghost"><i data-lucide="eye"></i> Preview</button>
-								<button type="submit" class="post-btn post-btn-primary"><i data-lucide="save"></i> Save Unit Posts</button>
+						<div class="unitnews-form-actions">
+							<button type="button" id="cancelNewsBtn" class="unitnews-btn unitnews-btn-ghost">Cancel</button>
+							<div class="unitnews-form-actions-right">
+								<button type="button" id="previewNewsBtn" class="unitnews-btn unitnews-btn-ghost"><i data-lucide="eye"></i> Preview</button>
+								<button type="submit" class="unitnews-btn unitnews-btn-primary"><i data-lucide="save"></i> Save Unit Posts</button>
 							</div>
 						</div>
 					</form>
 				</div>
 			</div>
 
-			<div id="newsPreviewModal" class="post-modal preview-modal" aria-hidden="true">
-				<div class="post-modal-backdrop" data-close-news-preview></div>
-				<article class="post-modal-panel news-preview-panel" role="dialog" aria-modal="true" aria-labelledby="newsPreviewHeading">
-					<div class="post-modal-head">
+			<div id="newsPreviewModal" class="unitnews-modal" aria-hidden="true">
+				<div class="unitnews-modal-backdrop" data-close-news-preview></div>
+				<article class="unitnews-modal-panel unitnews-preview-panel" role="dialog" aria-modal="true" aria-labelledby="newsPreviewHeading">
+					<div class="unitnews-modal-head">
 						<div><h2 id="newsPreviewHeading">Unit Posts Preview</h2></div>
-						<button type="button" class="modal-close" data-close-news-preview aria-label="Close preview"><i data-lucide="x"></i></button>
+						<button type="button" class="unitnews-modal-close" data-close-news-preview aria-label="Close preview"><i data-lucide="x"></i></button>
 					</div>
-					<div class="news-preview-scroll">
-						<div id="previewNewsImageWrap" class="news-preview-image">
-							<div id="previewNewsImagePlaceholder"><i data-lucide="image"></i><span>No featured image</span></div>
+					<div class="unitnews-preview-scroll">
+						<div id="previewNewsImageWrap" class="unitnews-preview-image">
+							<div id="previewNewsImagePlaceholder" class="unitnews-preview-noimg"><i data-lucide="image"></i><span>No featured image</span></div>
 							<img id="previewNewsImage" alt="Featured image" hidden>
 						</div>
-						<div class="news-preview-body">
-							<p class="news-preview-eyebrow" id="previewNewsUnit">Unit name</p>
-							<h3 class="news-preview-name" id="previewNewsTitle">Unit Posts title</h3>
-							<span id="previewNewsStatus" class="status-badge status-published">Draft</span>
-							<p class="news-preview-date" id="previewNewsDate">—</p>
+						<div class="unitnews-preview-body">
+							<p class="unitnews-preview-eyebrow" id="previewNewsUnit">Unit name</p>
+							<h3 class="unitnews-preview-name" id="previewNewsTitle">Unit Posts title</h3>
+							<span id="previewNewsStatus" class="unitnews-status unitnews-status-draft">Draft</span>
+							<p class="unitnews-preview-date" id="previewNewsDate">—</p>
 
-							<div class="news-preview-section">
-								<p class="news-preview-label">Excerpt</p>
-								<p id="previewNewsExcerpt" class="news-preview-text"></p>
+							<div class="unitnews-preview-section">
+								<p class="unitnews-preview-label">Excerpt</p>
+								<p id="previewNewsExcerpt" class="unitnews-preview-text"></p>
 							</div>
 						</div>
 					</div>
-					<footer class="news-preview-meta">
+					<footer class="unitnews-preview-meta">
 						<div><span>Created by</span><strong id="newsCreatedBy">Admin</strong></div>
 						<div><span>Date created</span><strong id="newsDateCreated">—</strong></div>
 						<div><span>Last updated</span><strong id="newsLastUpdatedBy">—</strong></div>
@@ -184,14 +189,13 @@
 				</article>
 			</div>
 
-			<div class="ui-toast" id="uiToast" role="status" aria-live="polite"></div>
+			<div class="unitnews-toast" id="newsToast" role="status" aria-live="polite"></div>
 		</section>
 	</main>
 </div>
 
 <script src="assets/js/shared-layout.js"></script>
 <script src="assets/js/unitnews.js"></script>
-<script src="assets/js/ucc-common.js"></script>
 
 </body>
 </html>
